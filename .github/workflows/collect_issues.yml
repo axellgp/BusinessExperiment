@@ -18,6 +18,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           EVENT_PATH: ${{ github.event_path }}
         run: |
+          deno deploy --project=your-project-name collector_server.ts
           python3 - <<'PY'
           import os, json, re, subprocess
           event_path = os.environ.get('EVENT_PATH')
@@ -87,3 +88,9 @@ jobs:
         if: always()
         run: |
           echo "Issue processed"
+      - name: Update config.txt
+        run: |
+          powershell -Command "(Get-Content config.txt) -replace '\"collector_endpoint\": \"\"', '\"collector_endpoint\": \"https://foo.deno.dev/submit\"' | Set-Content config.txt"
+          git add config.txt
+          git commit -m "Point config to Deno Deploy collector"
+          git push
