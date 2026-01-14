@@ -17,6 +17,8 @@
     .nav a:hover{background:rgba(11,43,74,0.03)}
     .main{flex:1;padding:20px}
     .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .admin-controls{display:flex;gap:8px;align-items:center}
+    .admin-controls button{background:#fff;border:1px solid rgba(11,43,74,0.06);padding:6px 8px;border-radius:8px;cursor:pointer;font-size:13px}
     .search{flex:1;display:flex;align-items:center;background:#fff;padding:10px 12px;border-radius:12px;border:1px solid rgba(11,43,74,0.04);max-width:720px}
     .search input{border:0;outline:0;font-size:14px;width:100%}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px}
@@ -77,10 +79,28 @@
             <input placeholder="Rechercher une offre, une marque..." />
           </div>
         </div>
+        <div class="admin-controls">
+          <button id="exportCsvBtn">Exporter CSV</button>
+          <button id="downloadJsonBtn">Télécharger JSON</button>
+          <button id="clearLocalBtn">Effacer local</button>
+          <button id="editConfigBtn">Éditer config</button>
+        </div>
+        </div>
       </div>
 
       <div class="grid" id="grid">
         <!-- Offers will be rendered here from config.txt -->
+      </div>
+
+      <div id="configEditorPanel" style="display:none;margin-top:18px;background:#fff;padding:12px;border-radius:12px;box-shadow:0 6px 20px rgba(11,43,74,0.06);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong>Éditeur config (JSON)</strong>
+          <div style="display:flex;gap:8px">
+            <button id="openIssueBtn" style="background:#0b2b4a;color:#fff;border-radius:8px;padding:6px 10px;border:0;cursor:pointer">Appliquer via Issue</button>
+            <button id="closeEditorBtn" style="background:#fff;border:1px solid rgba(11,43,74,0.06);padding:6px 10px;border-radius:8px;cursor:pointer">Fermer</button>
+          </div>
+        </div>
+        <textarea id="configEditor" style="width:100%;height:280px;font-family:monospace;padding:8px;border-radius:8px;border:1px solid #e6e9ef"></textarea>
       </div>
 
       <footer>© Club Employés — Expérience locale</footer>
@@ -145,45 +165,31 @@
       const h = document.createElement('h3'); h.className='title'; h.textContent = offer.title; a.appendChild(h);
       const p = document.createElement('p'); p.className='desc'; p.textContent = offer.desc; a.appendChild(p);
       const btn = document.createElement('button'); btn.className='choose'; btn.dataset.offer = offer.id; btn.textContent = 'Choisir cette offre';
-      btn.addEventListener('click', async ()=>{
-        // lock selection visually and disable other buttons
+      btn.addEventListener('click', ()=>{
+        // lock selection visually and disable other buttons; make other cards transparent
         const allBtns = document.querySelectorAll('.choose');
-        allBtns.forEach(b=>{ if(b!==btn) b.disabled = true; else b.disabled = true; });
-        a.style.opacity = '1';
-        // prepare payload
+        const allCards = document.querySelectorAll('.card');
+        allBtns.forEach(b=>{ b.disabled = true; });
+        allCards.forEach(c=>{ if(c !== a) c.style.opacity = '0.35'; else c.style.opacity = '1'; });
+
+        // prepare local payload
         const payload = {
           ip: CLIENT_IP || 'unknown',
           offerId: offer.id,
           periode: offer.season || '',
           mention: mention ? 'oui' : 'non',
-          mentionType: mention ? mention.text : '',
+          mentionType: mention ? (mention.text||'') : '',
           timestamp: new Date().toISOString()
         };
 
-        // submit to local collector server if available
-        try{
-          const res = await fetch('/submit', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-          const j = await res.json().catch(()=>({accepted:false,message:'No JSON'}));
-          if(!res.ok || j.accepted===false){
-            // if server says blocked
-            if(j.message && j.message.includes('blocked')){
-              alert('Protection multi réponses activé');
-            } else {
-              alert('Erreur lors de l\'envoi — les résultats seront stockés localement.');
-              // store locally as fallback
-              const key = 'local_submissions';
-              const arr = JSON.parse(localStorage.getItem(key)||'[]'); arr.push(payload); localStorage.setItem(key, JSON.stringify(arr));
-            }
-          } else {
-            // accepted
-            btn.textContent='Merci 😊'; setTimeout(()=>btn.textContent='Choisir cette offre',900);
-          }
-        }catch(e){
-          console.warn('Collector server not reachable, saving locally', e);
-          const key = 'local_submissions';
-          const arr = JSON.parse(localStorage.getItem(key)||'[]'); arr.push(payload); localStorage.setItem(key, JSON.stringify(arr));
-          btn.textContent='Merci 😊'; setTimeout(()=>btn.textContent='Choisir cette offre',900);
-        }
+        // save locally
+        const key = 'local_submissions';
+        const arr = JSON.parse(localStorage.getItem(key)||'[]');
+        arr.push(payload);
+        localStorage.setItem(key, JSON.stringify(arr));
+
+        // visual feedback
+        btn.textContent='Merci 😊'; setTimeout(()=>btn.textContent='Choisir cette offre',900);
       });
       a.appendChild(btn);
       return a;
@@ -214,6 +220,80 @@
 
       // resolve public IP for this user (best-effort)
       resolveClientIp();
+
+      // wire admin buttons (elements are present because script is at end of body)
+      const exportBtn = document.getElementById('exportCsvBtn');
+      const clearBtn = document.getElementById('clearLocalBtn');
+      const downloadJson = document.getElementById('downloadJsonBtn');
+      const editConfigBtn = document.getElementById('editConfigBtn');
+      const configEditorPanel = document.getElementById('configEditorPanel');
+      const configEditor = document.getElementById('configEditor');
+      const openIssueBtn = document.getElementById('openIssueBtn');
+      const closeEditorBtn = document.getElementById('closeEditorBtn');
+      if(exportBtn) exportBtn.addEventListener('click', exportLocalCsv);
+      if(clearBtn) clearBtn.addEventListener('click', clearLocalSubmissions);
+      if(downloadJson) downloadJson.addEventListener('click', downloadLocalJson);
+      if(editConfigBtn) editConfigBtn.addEventListener('click', ()=>{
+        // toggle editor
+        if(configEditorPanel.style.display === 'none'){
+          loadConfigIntoEditor(); configEditorPanel.style.display = 'block'; configEditor.scrollTop = 0;
+        } else { configEditorPanel.style.display = 'none'; }
+      });
+      if(closeEditorBtn) closeEditorBtn.addEventListener('click', ()=>configEditorPanel.style.display='none');
+      if(openIssueBtn) openIssueBtn.addEventListener('click', openConfigIssue);
+
+      function exportLocalCsv(){
+        const key = 'local_submissions';
+        const arr = JSON.parse(localStorage.getItem(key)||'[]');
+        if(!arr.length){ alert('Aucune soumission locale.'); return; }
+        const header = ['mention','Periode','Type Mention','ID','Timestamp','OfferId'];
+        const rows = arr.map(r=>[r.mention,r.periode,r.mentionType,r.ip || 'unknown',r.timestamp,r.offerId]);
+        const csv = [header].concat(rows).map(r=>r.map(cell=>`"${String(cell).replace(/"/g,'""')}"`).join(';')).join('\n');
+        const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'resultat_local.csv'; document.body.appendChild(a); a.click(); a.remove();
+      }
+
+      function downloadLocalJson(){
+        const key = 'local_submissions';
+        const arr = JSON.parse(localStorage.getItem(key)||'[]');
+        if(!arr.length){ alert('Aucune soumission locale.'); return; }
+        const blob = new Blob([JSON.stringify(arr, null, 2)],{type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'resultat_local.json'; document.body.appendChild(a); a.click(); a.remove();
+      }
+
+      function clearLocalSubmissions(){
+        if(!confirm('Effacer toutes les soumissions locales ?')) return;
+        localStorage.removeItem('local_submissions');
+        alert('Données locales effacées');
+      }
+
+      // Config editor helpers
+      async function loadConfigIntoEditor(){
+        try{
+          const res = await fetch(CONFIG_PATH, {cache:'no-store'});
+          const txt = await res.text();
+          try{ const j = JSON.parse(txt); configEditor.value = JSON.stringify(j,null,2); return; }catch(e){ configEditor.value = txt; return; }
+        }catch(e){
+          // fallback to embedded
+          try{ const embedded = document.getElementById('embedded-config'); configEditor.value = JSON.stringify(JSON.parse(embedded.textContent),null,2); }catch(e2){ configEditor.value = '{}'; }
+        }
+      }
+
+      function openConfigIssue(){
+        const txt = configEditor.value.trim();
+        if(!txt){ alert('Config vide'); return; }
+        try{ JSON.parse(txt); }catch(e){ if(!confirm('Le JSON est invalide. Ouvrir l\'issue quand même ?')) return; }
+        const repo = 'axellgp/BusinessExperiment';
+        const title = encodeURIComponent('CONFIG UPDATE');
+        // put JSON in body; we URL-encode and allow label to be set
+        const body = encodeURIComponent(txt);
+        const labels = encodeURIComponent('config-update');
+        const issueUrl = `https://github.com/${repo}/issues/new?title=${title}&body=${body}&labels=${labels}`;
+        window.open(issueUrl,'_blank');
+        alert('Issue créée : GitHub ouvrira l\'éditeur d\'issue. Le workflow appliquera la config quand l\'issue sera ouverte.');
+      }
 
       offers.forEach(o=>{
         let mentionObj = null;

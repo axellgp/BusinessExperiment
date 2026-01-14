@@ -1,0 +1,89 @@
+name: Collect Issue Submissions
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Process issue and append to files
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_PATH: ${{ github.event_path }}
+        run: |
+          python3 - <<'PY'
+          import os, json, re, subprocess
+          event_path = os.environ.get('EVENT_PATH')
+          if not event_path or not os.path.exists(event_path):
+              print('No event file')
+              raise SystemExit(1)
+          with open(event_path,'r',encoding='utf-8') as f:
+              ev = json.load(f)
+          issue = ev.get('issue',{})
+          body = issue.get('body','')
+          user = issue.get('user',{}).get('login','unknown')
+          created = issue.get('created_at','')
+
+          # Extract fields from body
+          def extract_field(name, txt):
+              for line in txt.splitlines():
+                  if line.lower().startswith(name.lower()):
+                      return line.split(':',1)[1].strip()
+              return ''
+
+          mention = extract_field('mention', body) or 'non'
+          periode = extract_field('Periode', body)
+          mentionType = extract_field('Type Mention', body)
+          offerId = extract_field('OfferId', body)
+
+          # Append to resultat.txt
+          res_file = 'resultat.txt'
+          header = 'mention;Periode;Type Mention;ID;Timestamp;OfferId\n'
+          line = f"{mention};{periode};{mentionType};{user};{created};{offerId}\n"
+          if not os.path.exists(res_file):
+              with open(res_file,'w',encoding='utf-8') as f:
+                  f.write(header)
+          with open(res_file,'a',encoding='utf-8') as f:
+              f.write(line)
+
+          # Append to ip.txt (store GitHub username as ID)
+          ip_file = 'ip.txt'
+          existing = set()
+          if os.path.exists(ip_file):
+              with open(ip_file,'r',encoding='utf-8') as f:
+                  existing = set(l.strip() for l in f if l.strip())
+          if user not in existing:
+              with open(ip_file,'a',encoding='utf-8') as f:
+                  f.write(user + '\n')
+
+          # Commit changes
+          subprocess.run(['git','config','user.name','github-actions'], check=False)
+          subprocess.run(['git','config','user.email','actions@github.com'], check=False)
+          subprocess.run(['git','add', res_file, ip_file], check=False)
+          subprocess.run(['git','commit','-m', f'Collect issue #{issue.get("number")}: append results'], check=False)
+          subprocess.run(['git','push','origin','gh-pages'], check=False)
+
+          # Add label 'collected' to the issue
+          import requests
+          repo = os.environ.get('GITHUB_REPOSITORY')
+          token = os.environ.get('GITHUB_TOKEN')
+          if token:
+              labels_url = f"https://api.github.com/repos/{repo}/issues/{issue.get('number')}/labels"
+              headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3+json'}
+              try:
+                  requests.post(labels_url, headers=headers, json=['collected'])
+              except Exception as e:
+                  print('Label add failed', e)
+          PY
+
+      - name: Close issue (optional)
+        if: always()
+        run: |
+          echo "Issue processed"

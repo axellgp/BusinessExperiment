@@ -1,0 +1,74 @@
+name: Apply Config From Issue
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  apply-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          ref: gh-pages
+
+      - name: Apply config from issue
+        env:
+          EVENT_PATH: ${{ github.event_path }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 - <<'PY'
+          import os, json, subprocess
+          event_path = os.environ.get('EVENT_PATH')
+          if not event_path or not os.path.exists(event_path):
+              raise SystemExit('no event')
+          with open(event_path,'r',encoding='utf-8') as f:
+              ev = json.load(f)
+          issue = ev.get('issue',{})
+          title = (issue.get('title') or '').strip().lower()
+          if 'config' not in title:
+              print('Not a config issue, skipping')
+              raise SystemExit(0)
+          body = issue.get('body','').strip()
+          # try to parse body as JSON directly
+          cfg = None
+          try:
+              cfg = json.loads(body)
+          except Exception:
+              # attempt to extract JSON block from body
+              import re
+              m = re.search(r'```(?:json)?\n([\s\S]+?)\n```', body, re.IGNORECASE)
+              if m:
+                  try:
+                      cfg = json.loads(m.group(1))
+                  except Exception as e:
+                      print('Could not parse JSON block', e)
+          if cfg is None:
+              print('No valid JSON config found in issue body')
+              raise SystemExit(1)
+
+          # write config.txt
+          cfg_path = 'config.txt'
+          with open(cfg_path,'w',encoding='utf-8') as f:
+              json.dump(cfg, f, ensure_ascii=False, indent=2)
+
+          # commit and push
+          subprocess.run(['git','config','user.name','github-actions'], check=False)
+          subprocess.run(['git','config','user.email','actions@github.com'], check=False)
+          subprocess.run(['git','add', cfg_path], check=False)
+          subprocess.run(['git','commit','-m', f'Apply config from issue #{issue.get("number")}'], check=False)
+          subprocess.run(['git','push','origin','gh-pages'], check=False)
+          # label the issue
+          import requests
+          token = os.environ.get('GITHUB_TOKEN')
+          repo = os.environ.get('GITHUB_REPOSITORY')
+          if token and repo:
+              labels_url = f'https://api.github.com/repos/{repo}/issues/{issue.get("number")}/labels'
+              headers = {'Authorization': f'token {token}', 'Accept': 'application/vnd.github.v3+json'}
+              try:
+                  requests.post(labels_url, headers=headers, json=['config-applied'])
+              except Exception as e:
+                  print('Label add failed', e)
+          PY
