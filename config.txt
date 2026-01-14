@@ -1,0 +1,27 @@
+{
+  "random_order": true,
+  "mention_allowed_on": "hyver",
+  "block_after_1": true,
+  "mention_probability": 0.6666667,
+  "mentions": [
+    { "text": "✨ Exclusif", "color": "#ff7a00" },
+    { "text": "🔥 Promo", "color": "#ff3b30" },
+    { "text": "⭐ Membre", "color": "#06b6d4" }
+  ],
+  "offers": [
+    {
+      "id": "hyver",
+      "season": "hyver",
+      "title": "Hiver",
+      "desc": "Départ Hiver 2027",
+      "image": "./glob.png"
+    },
+    {
+      "id": "ete",
+      "season": "ete",
+      "title": "Été",
+      "desc": "Départ Été 2027",
+      "image": "./glob.png"
+    }
+  ]
+}

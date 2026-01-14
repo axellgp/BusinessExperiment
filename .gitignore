@@ -1,0 +1,8 @@
+.vs/
+__pycache__/
+*.pyc
+resultat.txt
+ip.txt
+local_submissions
+node_modules/
+.DS_Store
