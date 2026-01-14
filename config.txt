@@ -14,14 +14,14 @@
       "season": "hyver",
       "title": "Hiver",
       "desc": "Départ Hiver 2027",
-      "image": "./glob.png"
+      "image": "./glob.jpeg"
     },
     {
       "id": "ete",
       "season": "ete",
       "title": "Été",
       "desc": "Départ Été 2027",
-      "image": "./glob.png"
+      "image": "./glob.jpeg"
     }
   ]
 }
