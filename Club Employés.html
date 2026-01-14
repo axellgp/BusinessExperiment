@@ -17,13 +17,13 @@
     .nav a:hover{background:rgba(11,43,74,0.03)}
     .main{flex:1;padding:20px;display:flex;flex-direction:column}
     /* reduce header spacing so offers appear higher */
-    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;padding:6px 0}
     .admin-controls{display:flex;gap:8px;align-items:center}
     .admin-controls button{background:#fff;border:1px solid rgba(11,43,74,0.06);padding:6px 8px;border-radius:8px;cursor:pointer;font-size:13px}
     .search{flex:1;display:flex;align-items:center;background:#fff;padding:10px 12px;border-radius:12px;border:1px solid rgba(11,43,74,0.04);max-width:720px}
     .search input{border:0;outline:0;font-size:14px;width:100%}
     /* content area keeps offers centered vertically beside the sidebar */
-    .content{flex:1;display:flex;align-items:flex-start;justify-content:center;padding-top:6px}
+    .content{flex:1;display:flex;align-items:center;justify-content:center;padding-top:6px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:0;max-width:980px;width:100%}
     .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 8px 24px rgba(11,43,74,0.06);position:relative;display:flex;flex-direction:column;min-height:320px}
     .thumb{height:220px;border-radius:10px;background:#fff;border:1px solid #eef2f7;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background-size:cover;background-position:center}
@@ -48,8 +48,10 @@
 
     @media (max-width:900px){.sidebar{display:none}.grid{grid-template-columns:1fr}.thumb{height:180px}.content{align-items:stretch;padding-top:12px}
       .mobile-tab{display:flex;position:fixed;left:12px;top:12px;background:#fff;padding:8px 12px;border-radius:20px;box-shadow:0 8px 24px rgba(11,43,74,0.12);align-items:center;gap:8px;z-index:80;cursor:pointer;font-weight:700}
+      .mobile-tab.pulse{animation:mobilePulse 1.6s ease-in-out infinite}
       .mobile-tab .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block}
     }
+    @keyframes mobilePulse{0%{transform:translateY(0)}50%{transform:translateY(-4px)}100%{transform:translateY(0)}}
   </style>
   <!-- Embedded fallback config (used if loading config.txt fails in the browser) -->
   <script id="embedded-config" type="application/json">
@@ -143,12 +145,12 @@
         <button id="adminSubmitBtn" style="background:var(--accent);color:#fff;border:0;padding:6px 10px;border-radius:8px">Se connecter</button>
       </div>
     </div>
+  </div>
 
-      <!-- mobile dynamic tab -->
-      <div id="mobileTab" class="mobile-tab" role="button" aria-label="Voir les offres">
-        <span class="dot" aria-hidden="true"></span>
-        <span>Club Employés • Offres</span>
-      </div>
+  <!-- mobile dynamic tab -->
+  <div id="mobileTab" class="mobile-tab" role="button" aria-label="Voir les offres">
+    <span class="dot" aria-hidden="true"></span>
+    <span>Club Employés • Offres</span>
   </div>
 
   <script>
@@ -348,6 +350,14 @@
             sidebarEl.classList.remove('mobile-open'); sidebarEl.style.display='none';
           }
         });
+
+        // visual cue: pulse the mobile tab when on small screens
+        function updateMobileTabState(){
+          if(window.innerWidth <= 900){ mobileTab.classList.add('pulse'); mobileTab.style.display = 'flex'; }
+          else { mobileTab.classList.remove('pulse'); mobileTab.style.display = 'none'; }
+        }
+        updateMobileTabState();
+        window.addEventListener('resize', updateMobileTabState);
       }
 
       function exportLocalCsv(){
