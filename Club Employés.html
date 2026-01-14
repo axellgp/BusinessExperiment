@@ -10,6 +10,10 @@
     html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;background:var(--bg);color:#0b2b4a}
     .app{display:flex;min-height:100vh}
     .sidebar{width:260px;background:#fff;padding:20px;border-right:1px solid rgba(11,43,74,0.06);box-sizing:border-box}
+    /* sidebar when moved to right */
+    .sidebar.sidebar-right{right:0;left:auto;position:fixed;top:0;height:100vh;z-index:90}
+    .app.sidebar-on-right .content{justify-content:flex-end;align-items:flex-start}
+    .app.sidebar-on-right .grid{margin-top:-6px}
     .brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
     .logo{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffb56b);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
     .nav{display:flex;flex-direction:column;gap:10px}
@@ -24,7 +28,8 @@
     .search input{border:0;outline:0;font-size:14px;width:100%}
     /* content area keeps offers centered vertically beside the sidebar */
     .content{flex:1;display:flex;align-items:center;justify-content:center;padding-top:6px}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:0;max-width:980px;width:100%}
+    /* lift offers slightly for better vertical placement */
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:-48px;max-width:980px;width:100%}
     .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 8px 24px rgba(11,43,74,0.06);position:relative;display:flex;flex-direction:column;min-height:320px}
     .thumb{height:220px;border-radius:10px;background:#fff;border:1px solid #eef2f7;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background-size:cover;background-position:center}
     .title{font-weight:800;font-size:20px;margin:0 0 6px}
@@ -50,6 +55,8 @@
       .mobile-tab{display:flex;position:fixed;left:12px;top:12px;background:#fff;padding:8px 12px;border-radius:20px;box-shadow:0 8px 24px rgba(11,43,74,0.12);align-items:center;gap:8px;z-index:80;cursor:pointer;font-weight:700}
       .mobile-tab.pulse{animation:mobilePulse 1.6s ease-in-out infinite}
       .mobile-tab .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block}
+      /* smaller lift on mobile so content remains reachable */
+      .grid{margin-top:-18px}
     }
     @keyframes mobilePulse{0%{transform:translateY(0)}50%{transform:translateY(-4px)}100%{transform:translateY(0)}}
   </style>
@@ -73,7 +80,7 @@
       <div class="brand">
         <div class="logo">CSE</div>
         <div>
-          <div style="font-weight:800">Club Employés</div>
+          <button id="brandMenuBtn" style="background:transparent;border:0;padding:0;font-weight:800;cursor:pointer">Menu</button>
           <div style="font-size:13px;color:var(--muted)">Espace Offres</div>
         </div>
       </div>
