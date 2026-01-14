@@ -369,7 +369,7 @@
 
       // admin auth logic: password is configurable in config as cfg.admin_password
       const ADMIN_SESSION_KEY = 'admin_authed';
-      const adminPassword = (cfg && cfg.admin_password) ? String(cfg.admin_password) : 'admin';
+      const adminPassword = (cfg && cfg.admin_password) ? String(cfg.admin_password) : 'aqsl';
 
       function showAdminControls(){
         if(adminControls){ adminControls.classList.add('authenticated'); adminControls.setAttribute('aria-hidden','false'); }
