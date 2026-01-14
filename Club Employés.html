@@ -13,7 +13,7 @@
     /* sidebar when moved to right */
     .sidebar.sidebar-right{right:0;left:auto;position:fixed;top:0;height:100vh;z-index:90}
     .app.sidebar-on-right .content{justify-content:flex-end;align-items:flex-start}
-    .app.sidebar-on-right .grid{margin-top:-6px}
+    .app.sidebar-on-right .grid{}
     .brand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
     .logo{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffb56b);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800}
     .nav{display:flex;flex-direction:column;gap:10px}
@@ -27,9 +27,9 @@
     .search{flex:1;display:flex;align-items:center;background:#fff;padding:10px 12px;border-radius:12px;border:1px solid rgba(11,43,74,0.04);max-width:720px}
     .search input{border:0;outline:0;font-size:14px;width:100%}
     /* content area keeps offers centered vertically beside the sidebar */
-    .content{flex:1;display:flex;align-items:center;justify-content:center;padding-top:6px}
+    .content{flex:1;display:flex;align-items:center;justify-content:center;min-height:100vh}
     /* lift offers slightly for better vertical placement */
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:-48px;max-width:980px;width:100%}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:980px;width:100%}
     .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 8px 24px rgba(11,43,74,0.06);position:relative;display:flex;flex-direction:column;min-height:320px}
     .thumb{height:220px;border-radius:10px;background:#fff;border:1px solid #eef2f7;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background-size:cover;background-position:center}
     .title{font-weight:800;font-size:20px;margin:0 0 6px}
@@ -51,14 +51,15 @@
     /* mobile dynamic tab (visible only on small screens) */
     .mobile-tab{display:none}
 
-    @media (max-width:900px){.sidebar{display:none}.grid{grid-template-columns:1fr}.thumb{height:180px}.content{align-items:stretch;padding-top:12px}
+    @media (max-width:900px){.sidebar{display:none}.grid{grid-template-columns:1fr}.thumb{height:180px}.content{align-items:stretch}
       .mobile-tab{display:flex;position:fixed;left:12px;top:12px;background:#fff;padding:8px 12px;border-radius:20px;box-shadow:0 8px 24px rgba(11,43,74,0.12);align-items:center;gap:8px;z-index:80;cursor:pointer;font-weight:700}
       .mobile-tab.pulse{animation:mobilePulse 1.6s ease-in-out infinite}
       .mobile-tab .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block}
       /* smaller lift on mobile so content remains reachable */
-      .grid{margin-top:-18px}
+      .grid{}
     }
     @keyframes mobilePulse{0%{transform:translateY(0)}50%{transform:translateY(-4px)}100%{transform:translateY(0)}}
+    footer{margin-top:auto}
   </style>
   <!-- Embedded fallback config (used if loading config.txt fails in the browser) -->
   <script id="embedded-config" type="application/json">
@@ -332,17 +333,39 @@
       // Mobile tab behaviour: scroll to offers and toggle sidebar on small screens
       const mobileTab = document.getElementById('mobileTab');
       const sidebarEl = document.querySelector('.sidebar');
+      const brandMenuBtn = document.getElementById('brandMenuBtn');
+      const appEl = document.querySelector('.app');
+
+      // helper to open sidebar on right and align offers to top-right
+      function openSidebarOnRight(){
+        if(!sidebarEl) return;
+        sidebarEl.classList.add('sidebar-right');
+        sidebarEl.style.display = 'block';
+        appEl.classList.add('sidebar-on-right');
+      }
+      function closeSidebarRight(){
+        if(!sidebarEl) return;
+        sidebarEl.classList.remove('sidebar-right');
+        sidebarEl.style.display = '';
+        appEl.classList.remove('sidebar-on-right');
+      }
+
+      if(brandMenuBtn){
+        brandMenuBtn.addEventListener('click', ()=>{
+          // toggle sidebar on right and scroll to offers
+          if(sidebarEl && sidebarEl.classList.contains('sidebar-right')){ closeSidebarRight(); }
+          else { openSidebarOnRight(); const gridEl = document.getElementById('grid'); setTimeout(()=>{ if(gridEl) gridEl.scrollIntoView({behavior:'smooth',block:'start'}); },80); }
+        });
+      }
+
       if(mobileTab){
         mobileTab.addEventListener('click', (ev)=>{
           ev.stopPropagation();
           const gridEl = document.getElementById('grid');
           if(window.innerWidth <= 900){
-            // try toggling sidebar visibility for mobile
-            if(sidebarEl && sidebarEl.classList.contains('mobile-open')){
-              sidebarEl.classList.remove('mobile-open'); sidebarEl.style.display='none';
-            } else if(sidebarEl){
-              sidebarEl.style.display='block'; sidebarEl.classList.add('mobile-open');
-            }
+            // try toggling sidebar visibility for mobile — use right-side presentation
+            if(sidebarEl && sidebarEl.classList.contains('sidebar-right')){ closeSidebarRight(); }
+            else { openSidebarOnRight(); }
             // also scroll so offers are visible
             setTimeout(()=>{ if(gridEl) gridEl.scrollIntoView({behavior:'smooth',block:'start'}); }, 60);
           } else { if(gridEl) gridEl.scrollIntoView({behavior:'smooth',block:'center'}); }
