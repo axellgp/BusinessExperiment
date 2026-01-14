@@ -124,6 +124,7 @@
   {
     "random_order": true,
     "mention_allowed_on": "hyver",
+    "collector_endpoint": "",
     "mention_probability": 0.6666667,
     "mentions": ["Exclusif", "Promo", "Membre"],
     "offers": [
@@ -228,6 +229,7 @@
     function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a }
 
     let CLIENT_IP = null;
+    let COLLECTOR_ENDPOINT = null;
     function readCount(key){return parseInt(localStorage.getItem(key)||'0',10)}
     function writeCount(key,v){localStorage.setItem(key,String(v))}
 
@@ -236,6 +238,23 @@
         const r = await fetch('https://api.ipify.org?format=json');
         if(r.ok){ const j = await r.json(); CLIENT_IP = j.ip; }
       }catch(e){ console.warn('Could not resolve public IP', e); CLIENT_IP = 'unknown'; }
+    }
+
+    async function submitToCollector(payload){
+      if(!COLLECTOR_ENDPOINT) return;
+      try{
+        const resp = await fetch(COLLECTOR_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          keepalive: true
+        });
+        if(!resp.ok){
+          console.warn('Collector rejected payload', resp.status);
+        }
+      }catch(err){
+        console.warn('Collector submission failed', err);
+      }
     }
 
     async function loadConfig(){
@@ -301,6 +320,9 @@
         const arr = JSON.parse(localStorage.getItem(key)||'[]');
         arr.push(payload);
         localStorage.setItem(key, JSON.stringify(arr));
+        if(COLLECTOR_ENDPOINT){
+          submitToCollector(payload);
+        }
 
         // visual feedback
         btn.textContent='Merci 😊'; setTimeout(()=>btn.textContent='Choisir cette offre',900);
@@ -322,6 +344,7 @@
 
     (async function init(){
       const cfg = await loadConfig();
+      COLLECTOR_ENDPOINT = (cfg.collector_endpoint && cfg.collector_endpoint.trim()) ? cfg.collector_endpoint.trim() : null;
       let offers = cfg.offers.map(o=>Object.assign({},o));
       if(cfg.random_order) offers = shuffle(offers);
 

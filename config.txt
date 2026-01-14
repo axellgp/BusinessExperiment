@@ -2,6 +2,7 @@
   "random_order": true,
   "mention_allowed_on": "hyver",
   "block_after_1": true,
+  "collector_endpoint": "",
   "mention_probability": 0.6666667,
   "mentions": [
     { "text": "✨ Le Favoris de L'équipe ✨", "color": "#ff7a00" },
