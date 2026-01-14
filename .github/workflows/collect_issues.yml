@@ -44,7 +44,7 @@ jobs:
           offerId = extract_field('OfferId', body)
 
           # Append to resultat.txt
-          res_file = 'resultat.txt'
+          res_file = 'resultat.csv'
           header = 'mention;Periode;Type Mention;ID;Timestamp;OfferId\n'
           line = f"{mention};{periode};{mentionType};{user};{created};{offerId}\n"
           if not os.path.exists(res_file):
