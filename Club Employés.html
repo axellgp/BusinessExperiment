@@ -394,6 +394,9 @@
       // Mobile tab behaviour
       const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
       const appEl = document.querySelector('.app');
+      const brandMenuBtn = document.getElementById('brandMenuBtn');
+      const mobileTab = document.getElementById('mobileTab');
+      const sidebarEl = document.querySelector('.sidebar');
 
       function isMobile(){ return window.innerWidth <= 768; }
 
@@ -425,10 +428,7 @@
       if(sidebarCloseBtn){
         sidebarCloseBtn.addEventListener('click', (e)=>{
           e.preventDefault();
-          closeSidebarMobile(); } else {
-              openSidebarMobile();
-            }
-          }
+          closeSidebarMobile();
         });
       }
 
