@@ -136,15 +136,15 @@
 <body>
   <div class="app">
     <aside class="sidebar" aria-label="Navigation">
-      <div c>
+      <div class="brand">
+        <div>
           <div class="logo">CSE</div>
         </div>
         <div>
-          <button id="brandMenuBtn" style="background:transparent;border:0;padding:0;font-weight:800;cursor:pointer">Menu</button>
+          <button id="brandMenuBtn" style="background:transparent;border:0;padding:0;font-weight:800;cursor:pointer;font-size:14px">Menu</button>
           <div style="font-size:13px;color:var(--muted)">Espace Offres</div>
         </div>
-        <button class="sidebar-close" id="sidebarCloseBtn" aria-label="Fermer le menu">×</buttonv style="font-size:13px;color:var(--muted)">Espace Offres</div>
-        </div>
+        <button class="sidebar-close" id="sidebarCloseBtn" aria-label="Fermer le menu">×</button>
       </div>
       <nav class="nav">
         <a href="#">🏝️ Voyages</a>
@@ -536,6 +536,8 @@
 
         const card = createCard(o, mentionObj);
         grid.appendChild(card);
+      });
+    })();
   </script>
 </body>
 </html>
