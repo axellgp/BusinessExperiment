@@ -16,13 +16,14 @@
     .nav a{color:var(--nav);text-decoration:none;padding:8px;border-radius:8px;display:flex;align-items:center;gap:10px}
     .nav a:hover{background:rgba(11,43,74,0.03)}
     .main{flex:1;padding:20px;display:flex;flex-direction:column}
-    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    /* reduce header spacing so offers appear higher */
+    .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
     .admin-controls{display:flex;gap:8px;align-items:center}
     .admin-controls button{background:#fff;border:1px solid rgba(11,43,74,0.06);padding:6px 8px;border-radius:8px;cursor:pointer;font-size:13px}
     .search{flex:1;display:flex;align-items:center;background:#fff;padding:10px 12px;border-radius:12px;border:1px solid rgba(11,43,74,0.04);max-width:720px}
     .search input{border:0;outline:0;font-size:14px;width:100%}
     /* content area keeps offers centered vertically beside the sidebar */
-    .content{flex:1;display:flex;align-items:center;justify-content:center}
+    .content{flex:1;display:flex;align-items:flex-start;justify-content:center;padding-top:6px}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:0;max-width:980px;width:100%}
     .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 8px 24px rgba(11,43,74,0.06);position:relative;display:flex;flex-direction:column;min-height:320px}
     .thumb{height:220px;border-radius:10px;background:#fff;border:1px solid #eef2f7;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background-size:cover;background-position:center}
@@ -42,7 +43,13 @@
     .modal .box{background:#fff;padding:18px;border-radius:10px;min-width:320px;box-shadow:0 10px 30px rgba(11,43,74,0.12)}
     .modal input{width:100%;padding:8px;border-radius:8px;border:1px solid #e6e9ef;margin-top:8px}
 
-    @media (max-width:900px){.sidebar{display:none}.grid{grid-template-columns:1fr}.thumb{height:180px}.content{align-items:stretch;padding-top:12px}}
+    /* mobile dynamic tab (visible only on small screens) */
+    .mobile-tab{display:none}
+
+    @media (max-width:900px){.sidebar{display:none}.grid{grid-template-columns:1fr}.thumb{height:180px}.content{align-items:stretch;padding-top:12px}
+      .mobile-tab{display:flex;position:fixed;left:12px;top:12px;background:#fff;padding:8px 12px;border-radius:20px;box-shadow:0 8px 24px rgba(11,43,74,0.12);align-items:center;gap:8px;z-index:80;cursor:pointer;font-weight:700}
+      .mobile-tab .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block}
+    }
   </style>
   <!-- Embedded fallback config (used if loading config.txt fails in the browser) -->
   <script id="embedded-config" type="application/json">
@@ -136,6 +143,12 @@
         <button id="adminSubmitBtn" style="background:var(--accent);color:#fff;border:0;padding:6px 10px;border-radius:8px">Se connecter</button>
       </div>
     </div>
+
+      <!-- mobile dynamic tab -->
+      <div id="mobileTab" class="mobile-tab" role="button" aria-label="Voir les offres">
+        <span class="dot" aria-hidden="true"></span>
+        <span>Club Employés • Offres</span>
+      </div>
   </div>
 
   <script>
@@ -306,6 +319,36 @@
         else { alert('Mot de passe incorrect'); }
       });
       if(logoutBtn) logoutBtn.addEventListener('click', ()=>{ sessionStorage.removeItem(ADMIN_SESSION_KEY); hideAdminControls(); alert('Déconnecté'); });
+
+      // Mobile tab behaviour: scroll to offers and toggle sidebar on small screens
+      const mobileTab = document.getElementById('mobileTab');
+      const sidebarEl = document.querySelector('.sidebar');
+      if(mobileTab){
+        mobileTab.addEventListener('click', (ev)=>{
+          ev.stopPropagation();
+          const gridEl = document.getElementById('grid');
+          if(window.innerWidth <= 900){
+            // try toggling sidebar visibility for mobile
+            if(sidebarEl && sidebarEl.classList.contains('mobile-open')){
+              sidebarEl.classList.remove('mobile-open'); sidebarEl.style.display='none';
+            } else if(sidebarEl){
+              sidebarEl.style.display='block'; sidebarEl.classList.add('mobile-open');
+            }
+            // also scroll so offers are visible
+            setTimeout(()=>{ if(gridEl) gridEl.scrollIntoView({behavior:'smooth',block:'start'}); }, 60);
+          } else { if(gridEl) gridEl.scrollIntoView({behavior:'smooth',block:'center'}); }
+        });
+
+        // clicking outside closes mobile sidebar
+        document.addEventListener('click', (e)=>{
+          if(window.innerWidth>900) return;
+          if(!sidebarEl) return;
+          const target = e.target;
+          if(sidebarEl.classList.contains('mobile-open') && !sidebarEl.contains(target) && !mobileTab.contains(target)){
+            sidebarEl.classList.remove('mobile-open'); sidebarEl.style.display='none';
+          }
+        });
+      }
 
       function exportLocalCsv(){
         const key = 'local_submissions';
