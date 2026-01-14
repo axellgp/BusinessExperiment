@@ -269,7 +269,7 @@
     function createCard(offer, mention){
       const a = document.createElement('article'); a.className='card'; a.dataset.offer = offer.id;
       if(mention) {
-        const m = document.createElement('div'); m.className='mention'; m.textContent = (mention.emoji? mention.emoji + ' ' : '✨ ') + mention.text;
+        const m = document.createElement('div'); m.className='mention'; m.textContent = (mention.emoji? mention.emoji + ' ' : ' ') + mention.text;
         if(mention.color) m.style.background = mention.color;
         a.appendChild(m);
       }
