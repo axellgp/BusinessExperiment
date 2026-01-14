@@ -12,14 +12,14 @@
     {
       "id": "hyver",
       "season": "hyver",
-      "title": "Hiver",
+      "title": "Vacance d'Hiver",
       "desc": "Départ Hiver 2027",
       "image": "./glob.jpeg"
     },
     {
       "id": "ete",
       "season": "ete",
-      "title": "Été",
+      "title": "Vacance d'Été",
       "desc": "Départ Été 2027",
       "image": "./glob.jpeg"
     }
