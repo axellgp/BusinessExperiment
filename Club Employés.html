@@ -8,9 +8,9 @@
   <style>
     :root{--bg:#f7f8fb;--card:#fff;--accent:#ff7a00;--muted:#6b7280;--nav:#0b2b4a}
     html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;background:var(--bg);color:#0b2b4a}
-    .app{display:flex;min-height:100vh}
-    .sidebar{width:260px;background:#fff;padding:20px;border-right:1px solid rgba(11,43,74,0.06);box-sizing:border-box}
-    /* sidebar when moved to right */
+    .app{display:flex;min-height:100vh;align-items:stretch}
+    .sidebar{width:260px;background:#fff;padding:20px;border-right:1px solid rgba(11,43,74,0.06);box-sizing:border-box;position:relative;height:100vh}
+    /* sidebar when moved to right (overlay) */
     .sidebar.sidebar-right{right:0;left:auto;position:fixed;top:0;height:100vh;z-index:90}
     .app.sidebar-on-right .content{justify-content:flex-end;align-items:flex-start}
     .app.sidebar-on-right .grid{}
@@ -19,17 +19,17 @@
     .nav{display:flex;flex-direction:column;gap:10px}
     .nav a{color:var(--nav);text-decoration:none;padding:8px;border-radius:8px;display:flex;align-items:center;gap:10px}
     .nav a:hover{background:rgba(11,43,74,0.03)}
-    .main{flex:1;padding:20px;display:flex;flex-direction:column}
+    .main{flex:1;padding:20px;display:flex;flex-direction:column;min-height:100vh}
     /* reduce header spacing so offers appear higher */
     .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;padding:6px 0}
     .admin-controls{display:flex;gap:8px;align-items:center}
     .admin-controls button{background:#fff;border:1px solid rgba(11,43,74,0.06);padding:6px 8px;border-radius:8px;cursor:pointer;font-size:13px}
     .search{flex:1;display:flex;align-items:center;background:#fff;padding:10px 12px;border-radius:12px;border:1px solid rgba(11,43,74,0.04);max-width:720px}
     .search input{border:0;outline:0;font-size:14px;width:100%}
-    /* content area keeps offers centered vertically beside the sidebar */
-    .content{flex:1;display:flex;align-items:center;justify-content:center;min-height:100vh}
-    /* lift offers slightly for better vertical placement */
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:980px;width:100%}
+    /* content area: place offers to the right of the sidebar (aligned to top) */
+    .content{flex:1;display:flex;align-items:flex-start;justify-content:flex-start;padding-top:12px;min-height:100vh}
+    /* grid of offers sits next to sidebar */
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;max-width:980px;width:100%;margin-left:8px}
     .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 8px 24px rgba(11,43,74,0.06);position:relative;display:flex;flex-direction:column;min-height:320px}
     .thumb{height:220px;border-radius:10px;background:#fff;border:1px solid #eef2f7;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background-size:cover;background-position:center}
     .title{font-weight:800;font-size:20px;margin:0 0 6px}
@@ -76,8 +76,8 @@
   </script>
 </head>
 <body>
-  <div class="app sidebar-on-right">
-    <aside class="sidebar sidebar-right" aria-label="Navigation">
+  <div class="app">
+    <aside class="sidebar" aria-label="Navigation">
       <div class="brand">
         <div class="logo">CSE</div>
         <div>
