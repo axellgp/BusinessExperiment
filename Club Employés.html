@@ -414,6 +414,16 @@
         await initFirebase(CONFIG.firebase_config);
       }
 
+      // ⚠️ Check Firebase is enabled - it's REQUIRED
+      if(!FIREBASE_ENABLED){
+        console.error('❌ ERREUR CRITIQUE: Firebase n\'est pas activé!');
+        alert('❌ ERREUR: Firebase n\'est pas disponible.\n\nVérifiez:\n1. La configuration Firebase dans config.txt\n2. Que Firebase est accessible\n\nLes réponses ne peuvent pas être enregistrées sans Firebase.');
+        document.body.innerHTML = '<div style="padding:40px;text-align:center;color:red;font-size:18px"><strong>❌ Erreur: Firebase non disponible</strong>\n\nVérifiez la console (F12) pour plus de détails.</div>';
+        return;
+      }
+
+      console.log('✅ Firebase activé et prêt');
+
       // Resolve IP
       await resolveClientIp();
 
@@ -523,16 +533,15 @@
           sessionId: SESSION_ID
         };
 
-        // Save locally
-        const key = 'local_submissions';
-        const arr = JSON.parse(localStorage.getItem(key) || '[]');
-        arr.push(payload);
-        localStorage.setItem(key, JSON.stringify(arr));
-
-        // Submit to Firebase if enabled
-        if(FIREBASE_ENABLED){
-          await submitToFirebase(payload);
+        // Submit ONLY to Firebase (no local storage)
+        if(!FIREBASE_ENABLED){
+          alert('❌ Erreur: Firebase non disponible. Les réponses ne peuvent pas être enregistrées.');
+          btn.textContent = 'Erreur ❌';
+          return;
         }
+
+        console.log('📤 Envoi de la réponse à Firebase:', payload);
+        await submitToFirebase(payload);
 
         // Visual feedback
         btn.textContent = 'Merci 😊';
@@ -640,69 +649,38 @@
 
     async function loadAdminData(){
       let responses = [];
-      const fbResponses = [];
-      const localResponses = [];
 
-      // Load from Firebase
-      if(FIREBASE_ENABLED){
-        try{
-          console.log('📥 Chargement depuis Firebase...');
-          const snap = await FIREBASE_DB.ref('responses').once('value');
-          if(snap.exists()){
-            snap.forEach(child => {
-              const data = child.val();
-              fbResponses.push({...data, firebaseKey: child.key});
-              responses.push({...data, firebaseKey: child.key, source: 'firebase'});
-              console.log('  ✅ Firebase:', data.timestamp, '|', data.offerId, '| Session:', data.sessionId);
-            });
-            console.log(`📊 Total Firebase: ${fbResponses.length} réponses`);
-          } else {
-            console.log('⚠️ Aucune donnée dans Firebase');
-          }
-        }catch(e){
-          console.error('❌ Erreur Firebase:', e);
-        }
-      } else {
-        console.warn('⚠️ Firebase désactivé');
+      // Load ONLY from Firebase
+      if(!FIREBASE_ENABLED){
+        console.error('❌ ERREUR: Firebase n\'est pas activé!');
+        alert('❌ Firebase est désactivé. Impossible de charger les données.');
+        return;
       }
 
-      // Merge with local storage
-      const localData = JSON.parse(localStorage.getItem('local_submissions') || '[]');
-      console.log(`📱 Local storage: ${localData.length} réponses`);
-      localData.forEach(r => {
-        localResponses.push(r);
-        console.log('  📱 Local:', r.timestamp, '|', r.offerId, '| Session:', r.sessionId);
-      });
-
-      // Remove duplicates - prioritize Firebase over local
-      const seen = new Set();
-      responses = responses.filter(r => {
-        const key = r.sessionId + '_' + r.timestamp;
-        if(seen.has(key)){
-          console.log(`  🔄 Doublon détecté et supprimé: ${key}`);
-          return false;
+      try{
+        console.log('📥 Chargement UNIQUEMENT depuis Firebase...');
+        const snap = await FIREBASE_DB.ref('responses').once('value');
+        
+        if(snap.exists()){
+          snap.forEach(child => {
+            const data = child.val();
+            responses.push({...data, firebaseKey: child.key});
+            console.log('  ✅ Firebase:', data.timestamp, '|', data.offerId, '| IP:', data.ip, '| Session:', data.sessionId);
+          });
+          console.log(`✅ Total Firebase: ${responses.length} réponses`);
+        } else {
+          console.log('⚠️ Aucune donnée dans Firebase');
         }
-        seen.add(key);
-        return true;
-      });
+      }catch(e){
+        console.error('❌ Erreur Firebase:', e);
+        alert('❌ Erreur de connexion à Firebase: ' + e.message);
+        return;
+      }
 
-      // Add local data that's not already in Firebase
-      localData.forEach(r => {
-        const key = r.sessionId + '_' + r.timestamp;
-        if(!seen.has(key)){
-          responses.push({...r, source: 'local'});
-          seen.add(key);
-          console.log(`  ➕ Ajout du local storage: ${key}`);
-        }
-      });
+      // Sort by timestamp (newest first)
+      responses.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-      console.log(`🎯 Total final après déduplication: ${responses.length} réponses`);
-      console.log('📋 Résumé source:', {
-        firebase: fbResponses.length,
-        local: localResponses.length,
-        final: responses.length
-      });
-
+      console.log(`🎯 Total final: ${responses.length} réponses (source: Firebase UNIQUEMENT)`);
       displayAdminData(responses);
     }
 
@@ -801,61 +779,50 @@
         return;
       }
 
-      const confirmDelete = confirm(`Êtes-vous sûr? Vous allez supprimer ${rowCheckboxes.length} réponse(s).`);
+      const confirmDelete = confirm(`Êtes-vous sûr? Vous allez supprimer ${rowCheckboxes.length} réponse(s) de Firebase.`);
       if(!confirmDelete) return;
 
       const keysToDelete = rowCheckboxes.map(cb => cb.value);
-      console.log(`🗑️ Suppression de ${keysToDelete.length} réponse(s):`, keysToDelete);
+      console.log(`🗑️ Suppression de ${keysToDelete.length} réponse(s) depuis Firebase:`, keysToDelete);
 
-      // Delete from local storage
-      let localData = JSON.parse(localStorage.getItem('local_submissions') || '[]');
-      const originalCount = localData.length;
-      
-      keysToDelete.forEach(key => {
-        localData = localData.filter(r => {
-          const rowKey = r.sessionId + '_' + r.timestamp;
-          return rowKey !== key;
-        });
-      });
-
-      const deletedLocal = originalCount - localData.length;
-      localStorage.setItem('local_submissions', JSON.stringify(localData));
-      console.log(`✅ ${deletedLocal} réponse(s) supprimée(s) du local storage`);
-
-      // Delete from Firebase (improved matching)
-      if(FIREBASE_ENABLED){
-        try{
-          console.log('🗑️ Suppression depuis Firebase...');
-          const snap = await FIREBASE_DB.ref('responses').once('value');
-          if(snap.exists()){
-            let deletedFromFb = 0;
-            snap.forEach(child => {
-              const r = child.val();
-              const rowKey = r.sessionId + '_' + r.timestamp;
-              
-              if(keysToDelete.includes(rowKey)){
-                console.log(`  → Suppression Firebase ID: ${child.key}`, r);
-                FIREBASE_DB.ref('responses/' + child.key).remove().then(() => {
-                  console.log(`  ✅ Supprimé: ${child.key}`);
-                  deletedFromFb++;
-                }).catch(err => {
-                  console.error(`  ❌ Erreur suppression ${child.key}:`, err);
-                });
-              }
-            });
-            console.log(`📊 ${deletedFromFb} réponse(s) marquées pour suppression Firebase`);
-          }
-        }catch(e){
-          console.error('❌ Erreur Firebase:', e);
-        }
+      // Delete from Firebase ONLY
+      if(!FIREBASE_ENABLED){
+        alert('❌ Firebase est désactivé. Impossible de supprimer.');
+        return;
       }
 
-      alert(`${rowCheckboxes.length} réponse(s) supprimée(s)`);
+      try{
+        const snap = await FIREBASE_DB.ref('responses').once('value');
+        if(snap.exists()){
+          let deletedCount = 0;
+          snap.forEach(child => {
+            const r = child.val();
+            const rowKey = r.sessionId + '_' + r.timestamp;
+            
+            if(keysToDelete.includes(rowKey)){
+              console.log(`  ✅ Suppression Firebase ID: ${child.key}`, r);
+              FIREBASE_DB.ref('responses/' + child.key).remove().then(() => {
+                deletedCount++;
+                console.log(`  ✓ Supprimé: ${child.key}`);
+              }).catch(err => {
+                console.error(`  ❌ Erreur suppression ${child.key}:`, err);
+              });
+            }
+          });
+          console.log(`📊 ${deletedCount} réponse(s) marquée(s) pour suppression`);
+        }
+      }catch(e){
+        console.error('❌ Erreur Firebase suppression:', e);
+        alert('❌ Erreur lors de la suppression: ' + e.message);
+        return;
+      }
+
+      alert(`${rowCheckboxes.length} réponse(s) supprimée(s) de Firebase`);
       // Reload after a short delay to let Firebase sync
       setTimeout(() => {
         console.log('🔄 Rechargement des données...');
         loadAdminData();
-      }, 500);
+      }, 1000);
     }
 
     function wireAdminButtons(allResponses){
