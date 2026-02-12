@@ -1,9 +1,18 @@
 {
   "random_order": true,
   "mention_allowed_on": "hyver",
-  "block_after_1": true,
-  "collector_endpoint": "https://axellgp-businessexp-91.deno.dev/submit",
   "mention_probability": 0.6666667,
+  "admin_password": "aqsl",
+  "collector_endpoint": "firebase",
+  "firebase_config": {
+    "apiKey": "AIzaSyC6VIb7Dhu9JLF6GOVn7zJ9L7Cnh-9th3g",
+    "authDomain": "recup-business-experiment.firebaseapp.com",
+    "projectId": "recup-business-experiment",
+    "databaseURL": "https://recup-business-experiment-default-rtdb.europe-west1.firebasedatabase.app/",
+    "storageBucket": "recup-business-experiment.firebasestorage.app",
+    "messagingSenderId": "263932511648",
+    "appId": "1:263932511648:web:a7b3f29e72fbbacd1ad0c5"
+  },
   "mentions": [
     { "text": "✨ Le Favoris de L'équipe ✨", "color": "#ff7a00" },
     { "text": "🔥 Promo", "color": "#ff3b30" },

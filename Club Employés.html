@@ -3,8 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Club Employés — Offres (CSE)</title>
+  <title>Club Employés — Offres (CSE) [Firebase]</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23ff7a00'/%3E%3Ctext x='50' y='57' font-size='32' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'%3ECSE%3C/text%3E%3C/svg%3E" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
   <style>
     :root{--bg:#f5f6f8;--card:#fff;--accent:#ff7a00;--muted:#6b7280;--nav:#0b2b4a}
     html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;background:var(--bg);color:#0b2b4a}
@@ -118,14 +121,50 @@
     }
     
     @keyframes mobilePulse{0%{transform:translateY(0)}50%{transform:translateY(-4px)}100%{transform:translateY(0)}}
+    
+    /* Admin Dashboard Styles */
+    .admin-dashboard{display:none;width:100%;height:100%;position:fixed;top:0;left:0;background:#f5f6f8;z-index:100;flex-direction:column;overflow:hidden}
+    .admin-dashboard.active{display:flex}
+    .admin-header{background:#fff;padding:20px;border-bottom:1px solid rgba(11,43,74,0.08);display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(11,43,74,0.04)}
+    .admin-header h2{margin:0;font-size:18px}
+    .admin-header-btn{background:none;border:none;padding:8px 12px;cursor:pointer;font-size:14px;border-radius:8px;transition:all 0.2s}
+    .admin-header-btn:hover{background:rgba(11,43,74,0.05)}
+    .admin-content{flex:1;display:flex;flex-direction:column;overflow:auto;padding:20px}
+    .admin-controls-bar{display:flex;gap:12px;margin-bottom:20px;align-items:center;flex-wrap:wrap}
+    .admin-controls-bar input{padding:8px 12px;border:1px solid rgba(11,43,74,0.08);border-radius:8px;font-size:13px}
+    .admin-controls-bar button{background:var(--accent);color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s}
+    .admin-controls-bar button:hover{background:#ff6b00}
+    .admin-controls-bar button.secondary{background:#fff;color:#0b2b4a;border:1px solid rgba(11,43,74,0.08)}
+    .admin-controls-bar button.secondary:hover{background:rgba(11,43,74,0.05)}
+    .admin-table-container{background:#fff;border-radius:12px;border:1px solid rgba(11,43,74,0.08);overflow:auto;flex:1}
+    .admin-table{width:100%;border-collapse:collapse;font-size:13px}
+    .admin-table thead{background:#f5f6f8;position:sticky;top:0}
+    .admin-table th{padding:12px;text-align:left;font-weight:600;border-bottom:1px solid rgba(11,43,74,0.08);background:#f5f6f8}
+    .admin-table td{padding:12px;border-bottom:1px solid rgba(11,43,74,0.04)}
+    .admin-table tbody tr:hover{background:rgba(11,43,74,0.02)}
+    .admin-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+    .admin-stat-card{background:#fff;padding:16px;border-radius:12px;border:1px solid rgba(11,43,74,0.08)}
+    .admin-stat-card h3{margin:0 0 8px;font-size:13px;color:var(--muted);font-weight:500}
+    .admin-stat-card .value{font-size:24px;font-weight:800;color:#0b2b4a}
+    .admin-stat-card .subtext{font-size:12px;color:var(--muted);margin-top:4px}
   </style>
   <!-- Embedded fallback config (used if loading config.txt fails in the browser) -->
   <script id="embedded-config" type="application/json">
   {
     "random_order": true,
     "mention_allowed_on": "hyver",
-    "collector_endpoint": "",
+    "collector_endpoint": "firebase",
     "mention_probability": 0.6666667,
+    "firebase_config": {
+      "apiKey": "YOUR_API_KEY",
+      "authDomain": "YOUR_PROJECT.firebaseapp.com",
+      "databaseURL": "https://YOUR_PROJECT.firebaseio.com",
+      "projectId": "YOUR_PROJECT_ID",
+      "storageBucket": "YOUR_PROJECT.appspot.com",
+      "messagingSenderId": "YOUR_MESSAGING_SENDER_ID",
+      "appId": "YOUR_APP_ID"
+    },
+    "admin_password": "aqsl",
     "mentions": ["Exclusif", "Promo", "Membre"],
     "offers": [
       {"id":"hyver","season":"hyver","title":"Alti Service 🏔️","desc":"Forfaits à prix réduits pour les montagnes.","image":"./images/hyver.jpg"},
@@ -216,6 +255,67 @@
     </div>
   </div>
 
+  <!-- Admin Dashboard -->
+  <div id="adminDashboard" class="admin-dashboard">
+    <div class="admin-header">
+      <h2>Tableau de Bord Admin — Réponses</h2>
+      <button id="closeDashboardBtn" class="admin-header-btn" title="Fermer">✕</button>
+    </div>
+    <div class="admin-content">
+      <div class="admin-stats" id="adminStats">
+        <div class="admin-stat-card">
+          <h3>Total réponses</h3>
+          <div class="value" id="statTotal">0</div>
+        </div>
+        <div class="admin-stat-card">
+          <h3>Temps moyen (sec)</h3>
+          <div class="value" id="statAvgTime">-</div>
+        </div>
+        <div class="admin-stat-card">
+          <h3>Hyver</h3>
+          <div class="value" id="statHyver">0</div>
+        </div>
+        <div class="admin-stat-card">
+          <h3>Été</h3>
+          <div class="value" id="statEte">0</div>
+        </div>
+      </div>
+
+      <div class="admin-controls-bar">
+        <input type="date" id="filterStartDate" placeholder="Du">
+        <input type="date" id="filterEndDate" placeholder="Au">
+        <select id="filterOffer" style="padding:8px 12px;border:1px solid rgba(11,43,74,0.08);border-radius:8px;font-size:13px">
+          <option value="">Tous les offres</option>
+          <option value="hyver">Hyver</option>
+          <option value="ete">Été</option>
+        </select>
+        <button id="applyFilterBtn">Appliquer filtres</button>
+        <button id="resetFilterBtn" class="secondary">Réinitialiser</button>
+        <button id="exportCsvBtn" class="secondary">📥 Exporter CSV</button>
+        <button id="exportJsonBtn" class="secondary">📋 Exporter JSON</button>
+        <button id="logoutDashboardBtn" class="secondary">Déconnexion</button>
+      </div>
+
+      <div class="admin-table-container">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Date/Heure</th>
+              <th>Offre</th>
+              <th>Mention</th>
+              <th>Temps de réponse (s)</th>
+              <th>IP</th>
+              <th>Session ID</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody">
+            <tr><td colspan="6" style="text-align:center;color:var(--muted)">Aucune réponse</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- mobile dynamic tab -->
   <div id="mobileTab" class="mobile-tab" role="button" aria-label="Voir les offres">
     <span class="dot" aria-hidden="true"></span>
@@ -223,152 +323,216 @@
   </div>
 
   <script>
-    // Load config.txt (JSON) and render offers. If fetch fails, fallback to default config.
-    const CONFIG_PATH = 'config.txt';
-
-    function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a }
-
+    // ===== FIREBASE & DATA COLLECTION =====
+    let CONFIG = null;
+    let FIREBASE_DB = null;
+    let FIREBASE_ENABLED = false;
     let CLIENT_IP = null;
-    let COLLECTOR_ENDPOINT = null;
-    function readCount(key){return parseInt(localStorage.getItem(key)||'0',10)}
-    function writeCount(key,v){localStorage.setItem(key,String(v))}
+    let SESSION_ID = null;
+    let PAGE_LOAD_TIME = Date.now();
+    let ADMIN_AUTHED = false;
 
+    // Generate unique session ID
+    const generateSessionId = () => '_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    SESSION_ID = sessionStorage.getItem('session_id') || generateSessionId();
+    sessionStorage.setItem('session_id', SESSION_ID);
+
+    // Get public IP
     async function resolveClientIp(){
       try{
         const r = await fetch('https://api.ipify.org?format=json');
         if(r.ok){ const j = await r.json(); CLIENT_IP = j.ip; }
-      }catch(e){ console.warn('Could not resolve public IP', e); CLIENT_IP = 'unknown'; }
+      }catch(e){ CLIENT_IP = 'unknown'; }
     }
 
-    async function submitToCollector(payload){
-      if(!COLLECTOR_ENDPOINT) return;
+    // Initialize Firebase
+    async function initFirebase(fbConfig){
       try{
-        const resp = await fetch(COLLECTOR_ENDPOINT, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-          keepalive: true
-        });
-        if(!resp.ok){
-          console.warn('Collector rejected payload', resp.status);
-        }
-      }catch(err){
-        console.warn('Collector submission failed', err);
+        const app = firebase.initializeApp(fbConfig, 'admin-app');
+        FIREBASE_DB = firebase.database(app);
+        FIREBASE_ENABLED = true;
+        console.log('Firebase initialized');
+      }catch(e){
+        console.warn('Firebase init failed:', e);
+        FIREBASE_ENABLED = false;
       }
     }
 
+    // Load config from config.txt or embedded
     async function loadConfig(){
-      // Attempt to fetch config.txt. When opening the HTML via file:// the browser often blocks fetch —
-      // in that case we fall back to the embedded JSON present in the page.
       try{
-        const res = await fetch(CONFIG_PATH, {cache: 'no-store'});
-        if(!res.ok) throw new Error('Fetch failed: ' + res.status);
-        const txt = await res.text();
-        try{ return JSON.parse(txt); }catch(e){ console.warn('config.txt parse error, falling back to embedded config', e); }
-      }catch(fetchErr){
-        console.warn('Could not fetch config.txt (this can happen when opening file://). Using embedded config.', fetchErr);
-      }
+        const res = await fetch('config.txt', {cache: 'no-store'});
+        if(res.ok){
+          const txt = await res.text();
+          try{ return JSON.parse(txt); }catch(e){ console.warn('config.txt parse error'); }
+        }
+      }catch(e){ console.warn('Could not fetch config.txt'); }
 
-      // Fallback: parse embedded config script tag
+      // Fallback to embedded
       try{
         const embedded = document.getElementById('embedded-config');
         if(embedded) return JSON.parse(embedded.textContent);
       }catch(e){ console.error('Embedded config parse failed', e); }
 
-      // Last resort default
-      return {
-        random_order:true,
-        mention_allowed_on:'hyver',
-        mention_probability:0.6666667,
-        mentions:['Exclusif'],
-        offers:[ {id:'hyver',season:'hyver',title:'Alti Service 🏔️',desc:'Forfaits à prix réduits',image:''}, {id:'ete',season:'ete',title:'Sport 2000 ⛷️',desc:'Promos saison',image:''} ]
-      };
+      return null;
     }
 
+    // Submit response to Firebase
+    async function submitToFirebase(payload){
+      if(!FIREBASE_ENABLED){
+        console.warn('Firebase not enabled');
+        return;
+      }
+      try{
+        const ref = FIREBASE_DB.ref('responses').push();
+        await ref.set(payload);
+        console.log('Response submitted to Firebase');
+      }catch(e){
+        console.error('Firebase submission failed:', e);
+      }
+    }
+
+    // ===== MAIN INIT =====
+    async function init(){
+      CONFIG = await loadConfig();
+      if(!CONFIG){ alert('Config non disponible'); return; }
+
+      // Initialize Firebase if config provided
+      if(CONFIG.firebase_config){
+        await initFirebase(CONFIG.firebase_config);
+      }
+
+      // Resolve IP
+      await resolveClientIp();
+
+      // Load offers and render
+      let offers = (CONFIG.offers || []).map(o => Object.assign({}, o));
+      if(CONFIG.random_order) offers = shuffle(offers);
+
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      const mentions = normalizeMentions(CONFIG.mentions);
+
+      // Setup admin
+      setupAdminUI();
+
+      // Render offers
+      offers.forEach(o => {
+        let mentionObj = null;
+        if(o.season === CONFIG.mention_allowed_on && mentions.length){
+          const prob = (typeof CONFIG.mention_probability === 'number') ? CONFIG.mention_probability : 0;
+          if(Math.random() < prob){
+            mentionObj = pickRandom(mentions);
+          }
+        }
+        const card = createCard(o, mentionObj);
+        grid.appendChild(card);
+      });
+    }
+
+    // Shuffle array
+    function shuffle(a){
+      for(let i = a.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // Normalize mentions
+    function normalizeMentions(raw){
+      if(!raw) return [];
+      return raw.map(m => {
+        if(typeof m === 'string') return {text: m};
+        if(typeof m === 'object') return {text: m.text || m.label || '', color: m.color || m.colorHex || null, emoji: m.emoji || null};
+        return {text: String(m)};
+      }).filter(x => x.text);
+    }
+
+    // Pick random from array
+    function pickRandom(arr){
+      if(!arr || !arr.length) return null;
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    // Create offer card
     function createCard(offer, mention){
-      const a = document.createElement('article'); a.className='card'; a.dataset.offer = offer.id;
-      if(mention) {
-        const m = document.createElement('div'); m.className='mention'; m.textContent = (mention.emoji? mention.emoji + ' ' : ' ') + mention.text;
+      const a = document.createElement('article');
+      a.className = 'card';
+      a.dataset.offer = offer.id;
+
+      if(mention){
+        const m = document.createElement('div');
+        m.className = 'mention';
+        m.textContent = (mention.emoji ? mention.emoji + ' ' : ' ') + mention.text;
         if(mention.color) m.style.background = mention.color;
         a.appendChild(m);
       }
-      const thumb = document.createElement('div'); thumb.className='thumb';
-      if(offer.image) thumb.style.backgroundImage = `url('${offer.image}')`; else thumb.textContent='🖼️';
+
+      const thumb = document.createElement('div');
+      thumb.className = 'thumb';
+      if(offer.image) thumb.style.backgroundImage = `url('${offer.image}')`;
+      else thumb.textContent = '🖼️';
       a.appendChild(thumb);
-      const h = document.createElement('h3'); h.className='title'; h.textContent = offer.title; a.appendChild(h);
-      const p = document.createElement('p'); p.className='desc'; p.textContent = offer.desc; a.appendChild(p);
-      const btn = document.createElement('button'); btn.className='choose'; btn.dataset.offer = offer.id; btn.textContent = 'Choisir cette offre';
-      btn.addEventListener('click', ()=>{
-        // lock selection visually and disable other buttons; make other cards transparent
+
+      const h = document.createElement('h3');
+      h.className = 'title';
+      h.textContent = offer.title;
+      a.appendChild(h);
+
+      const p = document.createElement('p');
+      p.className = 'desc';
+      p.textContent = offer.desc;
+      a.appendChild(p);
+
+      const btn = document.createElement('button');
+      btn.className = 'choose';
+      btn.dataset.offer = offer.id;
+      btn.textContent = 'Choisir cette offre';
+
+      btn.addEventListener('click', async () => {
+        const responseTime = (Date.now() - PAGE_LOAD_TIME) / 1000; // In seconds
+
+        // Disable buttons and fade other cards
         const allBtns = document.querySelectorAll('.choose');
         const allCards = document.querySelectorAll('.card');
-        allBtns.forEach(b=>{ b.disabled = true; });
-        allCards.forEach(c=>{ if(c !== a) c.style.opacity = '0.35'; else c.style.opacity = '1'; });
+        allBtns.forEach(b => { b.disabled = true; });
+        allCards.forEach(c => { if(c !== a) c.style.opacity = '0.35'; else c.style.opacity = '1'; });
 
-        // prepare local payload
+        // Prepare payload
         const payload = {
-          ip: CLIENT_IP || 'unknown',
+          timestamp: new Date().toISOString(),
           offerId: offer.id,
-          periode: offer.season || '',
+          period: offer.season || '',
           mention: mention ? 'oui' : 'non',
-          mentionType: mention ? (mention.text||'') : '',
-          timestamp: new Date().toISOString()
+          mentionType: mention ? (mention.text || '') : '',
+          responseTime: Math.round(responseTime * 100) / 100,
+          ip: CLIENT_IP || 'unknown',
+          sessionId: SESSION_ID
         };
 
-        // save locally
+        // Save locally
         const key = 'local_submissions';
-        const arr = JSON.parse(localStorage.getItem(key)||'[]');
+        const arr = JSON.parse(localStorage.getItem(key) || '[]');
         arr.push(payload);
         localStorage.setItem(key, JSON.stringify(arr));
-        if(COLLECTOR_ENDPOINT){
-          submitToCollector(payload);
+
+        // Submit to Firebase if enabled
+        if(FIREBASE_ENABLED){
+          await submitToFirebase(payload);
         }
 
-        // visual feedback
-        btn.textContent='Merci 😊'; setTimeout(()=>btn.textContent='Choisir cette offre',900);
+        // Visual feedback
+        btn.textContent = 'Merci 😊';
+        setTimeout(() => btn.textContent = 'Choisir cette offre', 900);
       });
+
       a.appendChild(btn);
       return a;
     }
 
-    function normalizeMentions(raw){
-      if(!raw) return [];
-      return raw.map(m=>{
-        if(typeof m === 'string') return {text:m};
-        if(typeof m === 'object') return {text:m.text || m.label || '', color:m.color || m.colorHex || null, emoji:m.emoji || null};
-        return {text:String(m)};
-      }).filter(x=>x.text);
-    }
-
-    function pickRandom(arr){ if(!arr || !arr.length) return null; return arr[Math.floor(Math.random()*arr.length)]; }
-
-    (async function init(){
-      const cfg = await loadConfig();
-      COLLECTOR_ENDPOINT = (cfg.collector_endpoint && cfg.collector_endpoint.trim()) ? cfg.collector_endpoint.trim() : null;
-      let offers = cfg.offers.map(o=>Object.assign({},o));
-      if(cfg.random_order) offers = shuffle(offers);
-
-      // Ensure counts exist
-      offers.forEach(o=>{ if(!localStorage.getItem('exp_count_' + o.id)) localStorage.setItem('exp_count_' + o.id,'0'); });
-
-      const grid = document.getElementById('grid');
-      grid.innerHTML = '';
-      const mentions = normalizeMentions(cfg.mentions);
-
-      // resolve public IP for this user (best-effort)
-      resolveClientIp();
-
-      // wire admin buttons (elements are present because script is at end of body)
-      const exportBtn = document.getElementById('exportCsvBtn');
-      const clearBtn = document.getElementById('clearLocalBtn');
-      const downloadJson = document.getElementById('downloadJsonBtn');
-      const editConfigBtn = document.getElementById('editConfigBtn');
-      const configEditorPanel = document.getElementById('configEditorPanel');
-      const configEditor = document.getElementById('configEditor');
-      const openIssueBtn = document.getElementById('openIssueBtn');
-      const closeEditorBtn = document.getElementById('closeEditorBtn');
-
-      // admin auth elements
+    // ===== ADMIN DASHBOARD =====
+    function setupAdminUI(){
       const adminToggleBtn = document.getElementById('adminToggleBtn');
       const adminModal = document.getElementById('adminModal');
       const adminPasswordInput = document.getElementById('adminPasswordInput');
@@ -377,189 +541,272 @@
       const adminControls = document.getElementById('adminControls');
       const logoutBtn = document.getElementById('logoutBtn');
 
-      // default bindings (buttons exist but are hidden until auth)
-      if(exportBtn) exportBtn.addEventListener('click', exportLocalCsv);
-      if(clearBtn) clearBtn.addEventListener('click', clearLocalSubmissions);
-      if(downloadJson) downloadJson.addEventListener('click', downloadLocalJson);
-      if(editConfigBtn) editConfigBtn.addEventListener('click', ()=>{
-        // toggle editor
-        if(configEditorPanel.style.display === 'none'){
-          loadConfigIntoEditor(); configEditorPanel.style.display = 'block'; configEditor.scrollTop = 0;
-        } else { configEditorPanel.style.display = 'none'; }
-      });
-      if(closeEditorBtn) closeEditorBtn.addEventListener('click', ()=>configEditorPanel.style.display='none');
-      if(openIssueBtn) openIssueBtn.addEventListener('click', openConfigIssue);
-
-      // admin auth logic: password is configurable in config as cfg.admin_password
-      const ADMIN_SESSION_KEY = 'admin_authed';
-      const adminPassword = (cfg && cfg.admin_password) ? String(cfg.admin_password) : 'aqsl';
+      const ADMIN_SESSION_KEY = 'admin_authed_v2';
+      const adminPassword = (CONFIG && CONFIG.admin_password) ? String(CONFIG.admin_password) : 'aqsl';
 
       function showAdminControls(){
-        if(adminControls){ adminControls.classList.add('authenticated'); adminControls.setAttribute('aria-hidden','false'); }
+        if(adminControls){
+          adminControls.classList.add('authenticated');
+          adminControls.setAttribute('aria-hidden', 'false');
+        }
+        ADMIN_AUTHED = true;
       }
+
       function hideAdminControls(){
-        if(adminControls){ adminControls.classList.remove('authenticated'); adminControls.setAttribute('aria-hidden','true'); }
+        if(adminControls){
+          adminControls.classList.remove('authenticated');
+          adminControls.setAttribute('aria-hidden', 'true');
+        }
+        ADMIN_AUTHED = false;
       }
 
-      // restore session
-      if(sessionStorage.getItem(ADMIN_SESSION_KEY) === '1') showAdminControls(); else hideAdminControls();
+      // Restore session
+      if(sessionStorage.getItem(ADMIN_SESSION_KEY) === '1') showAdminControls();
 
-      if(adminToggleBtn) adminToggleBtn.addEventListener('click', ()=>{ if(adminModal) adminModal.style.display='flex'; if(adminPasswordInput) adminPasswordInput.value=''; if(adminPasswordInput) adminPasswordInput.focus(); });
-      if(adminCancelBtn) adminCancelBtn.addEventListener('click', ()=>{ if(adminModal) adminModal.style.display='none'; });
-      if(adminSubmitBtn) adminSubmitBtn.addEventListener('click', ()=>{
+      if(adminToggleBtn) adminToggleBtn.addEventListener('click', () => {
+        if(adminModal) adminModal.style.display = 'flex';
+        if(adminPasswordInput) adminPasswordInput.value = '';
+        if(adminPasswordInput) adminPasswordInput.focus();
+      });
+
+      if(adminCancelBtn) adminCancelBtn.addEventListener('click', () => {
+        if(adminModal) adminModal.style.display = 'none';
+      });
+
+      if(adminSubmitBtn) adminSubmitBtn.addEventListener('click', () => {
         const val = (adminPasswordInput && adminPasswordInput.value) ? adminPasswordInput.value : '';
-        if(val === adminPassword){ sessionStorage.setItem(ADMIN_SESSION_KEY,'1'); showAdminControls(); if(adminModal) adminModal.style.display='none'; alert('Accès admin accordé'); }
-        else { alert('Mot de passe incorrect'); }
-      });
-      if(logoutBtn) logoutBtn.addEventListener('click', ()=>{ sessionStorage.removeItem(ADMIN_SESSION_KEY); hideAdminControls(); alert('Déconnecté'); });
-
-      // Mobile tab behaviour
-      const sidebarCloseBtn = document.getElementById('sidebarCloseBtn');
-      const appEl = document.querySelector('.app');
-      const brandMenuBtn = document.getElementById('brandMenuBtn');
-      const mobileTab = document.getElementById('mobileTab');
-      const sidebarEl = document.querySelector('.sidebar');
-
-      function isMobile(){ return window.innerWidth <= 768; }
-
-      function openSidebarMobile(){
-        if(!sidebarEl) return;
-        sidebarEl.classList.add('mobile-open');
-      }
-
-      function closeSidebarMobile(){
-        if(!sidebarEl) return;
-        sidebarEl.classList.remove('mobile-open');
-      }
-
-      // Brand menu button: toggle sidebar on mobile
-      if(brandMenuBtn){
-        brandMenuBtn.addEventListener('click', (e)=>{
-          e.preventDefault();
-          if(isMobile()){
-            if(sidebarEl && sidebarEl.classList.contains('mobile-open')){
-              closeSidebarMobile();
-            } else {
-              openSidebarMobile();
-            }
-          }
-        });
-      }
-
-      // Close button: close sidebar on mobile
-      if(sidebarCloseBtn){
-        sidebarCloseBtn.addEventListener('click', (e)=>{
-          e.preventDefault();
-          closeSidebarMobile();
-        });
-      }
-
-      // Mobile tab click
-      if(mobileTab){
-        mobileTab.addEventListener('click', (ev)=>{
-          ev.stopPropagation();
-          if(isMobile()){
-            if(sidebarEl && sidebarEl.classList.contains('mobile-open')){
-              closeSidebarMobile();
-            } else {
-              openSidebarMobile();
-            }
-          }
-        });
-
-        // Close sidebar when clicking outside
-        document.addEventListener('click', (e)=>{
-          if(!isMobile()) return;
-          if(!sidebarEl) return;
-          const target = e.target;
-          if(sidebarEl.classList.contains('mobile-open') && !sidebarEl.contains(target) && !mobileTab.contains(target) && !(target.closest('.brand button'))){
-            closeSidebarMobile();
-          }
-        });
-
-        // Update mobile tab visibility on resize
-        function updateMobileTabState(){
-          if(isMobile()){
-            mobileTab.classList.add('pulse');
-            mobileTab.style.display = 'flex';
-          } else {
-            mobileTab.classList.remove('pulse');
-            mobileTab.style.display = 'none';
-            closeSidebarMobile(); // Close sidebar when switching to desktop
-          }
+        if(val === adminPassword){
+          sessionStorage.setItem(ADMIN_SESSION_KEY, '1');
+          showAdminControls();
+          if(adminModal) adminModal.style.display = 'none';
+          alert('Accès admin accordé');
+          loadAdminDashboard();
+        } else {
+          alert('Mot de passe incorrect');
         }
-        updateMobileTabState();
-        window.addEventListener('resize', updateMobileTabState);
+      });
+
+      if(logoutBtn) logoutBtn.addEventListener('click', () => {
+        sessionStorage.removeItem(ADMIN_SESSION_KEY);
+        hideAdminControls();
+        closeAdminDashboard();
+        alert('Déconnecté');
+      });
+
+      // Admin dashboard buttons
+      const closeDashboardBtn = document.getElementById('closeDashboardBtn');
+      if(closeDashboardBtn){
+        closeDashboardBtn.addEventListener('click', closeAdminDashboard);
       }
 
-      function exportLocalCsv(){
-        const key = 'local_submissions';
-        const arr = JSON.parse(localStorage.getItem(key)||'[]');
-        if(!arr.length){ alert('Aucune soumission locale.'); return; }
-        const header = ['mention','Periode','Type Mention','ID','Timestamp','OfferId'];
-        const rows = arr.map(r=>[r.mention,r.periode,r.mentionType,r.ip || 'unknown',r.timestamp,r.offerId]);
-        const csv = [header].concat(rows).map(r=>r.map(cell=>`"${String(cell).replace(/"/g,'""')}"`).join(';')).join('\n');
-        const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'resultat_local.csv'; document.body.appendChild(a); a.click(); a.remove();
+      const oldExportBtn = document.getElementById('exportCsvBtn');
+      if(oldExportBtn && oldExportBtn.getAttribute('onclick')){
+        // This is the old button, remove old listener
       }
 
-      function downloadLocalJson(){
-        const key = 'local_submissions';
-        const arr = JSON.parse(localStorage.getItem(key)||'[]');
-        if(!arr.length){ alert('Aucune soumission locale.'); return; }
-        const blob = new Blob([JSON.stringify(arr, null, 2)],{type:'application/json'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = 'resultat_local.json'; document.body.appendChild(a); a.click(); a.remove();
+      // Link admin controls to dashboard
+      if(adminControls){
+        adminControls.addEventListener('click', (e) => {
+          // New export button
+          if(e.target.id === 'exportCsvBtn' || e.target.closest('#exportCsvBtn')){
+            loadAdminDashboard();
+          }
+        });
       }
+    }
 
-      function clearLocalSubmissions(){
-        if(!confirm('Effacer toutes les soumissions locales ?')) return;
-        localStorage.removeItem('local_submissions');
-        alert('Données locales effacées');
-      }
+    function loadAdminDashboard(){
+      const dashboard = document.getElementById('adminDashboard');
+      if(dashboard) dashboard.classList.add('active');
+      loadAdminData();
+    }
 
-      // Config editor helpers
-      async function loadConfigIntoEditor(){
+    function closeAdminDashboard(){
+      const dashboard = document.getElementById('adminDashboard');
+      if(dashboard) dashboard.classList.remove('active');
+    }
+
+    async function loadAdminData(){
+      let responses = [];
+
+      // Load from Firebase
+      if(FIREBASE_ENABLED){
         try{
-          const res = await fetch(CONFIG_PATH, {cache:'no-store'});
-          const txt = await res.text();
-          try{ const j = JSON.parse(txt); configEditor.value = JSON.stringify(j,null,2); return; }catch(e){ configEditor.value = txt; return; }
-        }catch(e){
-          // fallback to embedded
-          try{ const embedded = document.getElementById('embedded-config'); configEditor.value = JSON.stringify(JSON.parse(embedded.textContent),null,2); }catch(e2){ configEditor.value = '{}'; }
-        }
-      }
-
-      function openConfigIssue(){
-        const txt = configEditor.value.trim();
-        if(!txt){ alert('Config vide'); return; }
-        try{ JSON.parse(txt); }catch(e){ if(!confirm('Le JSON est invalide. Ouvrir l\'issue quand même ?')) return; }
-        const repo = 'axellgp/BusinessExperiment';
-        const title = encodeURIComponent('CONFIG UPDATE');
-        // put JSON in body; we URL-encode and allow label to be set
-        const body = encodeURIComponent(txt);
-        const labels = encodeURIComponent('config-update');
-        const issueUrl = `https://github.com/${repo}/issues/new?title=${title}&body=${body}&labels=${labels}`;
-        window.open(issueUrl,'_blank');
-        alert('Issue créée : GitHub ouvrira l\'éditeur d\'issue. Le workflow appliquera la config quand l\'issue sera ouverte.');
-      }
-
-      offers.forEach(o=>{
-        let mentionObj = null;
-        // Only allow mention on the configured season
-        if(o.season === cfg.mention_allowed_on && mentions.length){
-          const prob = (typeof cfg.mention_probability === 'number') ? cfg.mention_probability : 0;
-          if(Math.random() < prob){
-            // pick a mention uniformly at random each load
-            mentionObj = pickRandom(mentions);
+          const snap = await FIREBASE_DB.ref('responses').once('value');
+          if(snap.exists()){
+            snap.forEach(child => {
+              responses.push(child.val());
+            });
           }
+        }catch(e){
+          console.error('Error loading from Firebase:', e);
         }
+      }
 
-        const card = createCard(o, mentionObj);
-        grid.appendChild(card);
+      // Merge with local storage
+      const localData = JSON.parse(localStorage.getItem('local_submissions') || '[]');
+      responses = responses.concat(localData);
+
+      // Remove duplicates by sessionId+timestamp
+      const seen = new Set();
+      responses = responses.filter(r => {
+        const key = r.sessionId + '_' + r.timestamp;
+        if(seen.has(key)) return false;
+        seen.add(key);
+        return true;
       });
-    })();
+
+      displayAdminData(responses);
+    }
+
+    function displayAdminData(responses){
+      // Update stats
+      const totalByOffer = {};
+      let sumResponseTime = 0;
+      let countWithTime = 0;
+
+      responses.forEach(r => {
+        totalByOffer[r.offerId] = (totalByOffer[r.offerId] || 0) + 1;
+        if(typeof r.responseTime === 'number'){
+          sumResponseTime += r.responseTime;
+          countWithTime++;
+        }
+      });
+
+      document.getElementById('statTotal').textContent = responses.length;
+      document.getElementById('statHyver').textContent = totalByOffer['hyver'] || 0;
+      document.getElementById('statEte').textContent = totalByOffer['ete'] || 0;
+      if(countWithTime > 0){
+        document.getElementById('statAvgTime').textContent = (sumResponseTime / countWithTime).toFixed(1);
+      }
+
+      // Populate table
+      const tbody = document.getElementById('adminTableBody');
+      if(responses.length === 0){
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Aucune réponse</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = responses
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .map(r => {
+          const dt = new Date(r.timestamp).toLocaleString('fr-FR');
+          const mention = r.mention === 'oui' ? '✓ ' + (r.mentionType || '') : '-';
+          const time = typeof r.responseTime === 'number' ? r.responseTime.toFixed(2) : '-';
+          return `<tr>
+            <td>${dt}</td>
+            <td>${r.offerId}</td>
+            <td>${mention}</td>
+            <td>${time}</td>
+            <td>${r.ip}</td>
+            <td><code style="font-size:11px">${r.sessionId}</code></td>
+          </tr>`;
+        })
+        .join('');
+
+      // Wire up export/filter buttons
+      wireAdminButtons(responses);
+    }
+
+    function wireAdminButtons(allResponses){
+      const applyFilterBtn = document.getElementById('applyFilterBtn');
+      const resetFilterBtn = document.getElementById('resetFilterBtn');
+      const exportCsvBtn = document.getElementById('exportCsvBtn');
+      const exportJsonBtn = document.getElementById('exportJsonBtn');
+      const logoutDashboardBtn = document.getElementById('logoutDashboardBtn');
+
+      const filterStartDate = document.getElementById('filterStartDate');
+      const filterEndDate = document.getElementById('filterEndDate');
+      const filterOffer = document.getElementById('filterOffer');
+
+      if(applyFilterBtn){
+        applyFilterBtn.onclick = () => {
+          const startDate = filterStartDate.value ? new Date(filterStartDate.value) : null;
+          const endDate = filterEndDate.value ? new Date(filterEndDate.value) : null;
+          const offer = filterOffer.value;
+
+          let filtered = allResponses;
+          if(startDate){
+            filtered = filtered.filter(r => new Date(r.timestamp) >= startDate);
+          }
+          if(endDate){
+            endDate.setHours(23, 59, 59);
+            filtered = filtered.filter(r => new Date(r.timestamp) <= endDate);
+          }
+          if(offer){
+            filtered = filtered.filter(r => r.offerId === offer);
+          }
+
+          displayAdminData(filtered);
+        };
+      }
+
+      if(resetFilterBtn){
+        resetFilterBtn.onclick = () => {
+          filterStartDate.value = '';
+          filterEndDate.value = '';
+          filterOffer.value = '';
+          displayAdminData(allResponses);
+        };
+      }
+
+      if(exportCsvBtn){
+        exportCsvBtn.onclick = () => {
+          const csv = convertToCsv(allResponses);
+          downloadFile(csv, 'reponses_sondage.csv', 'text/csv');
+        };
+      }
+
+      if(exportJsonBtn){
+        exportJsonBtn.onclick = () => {
+          const json = JSON.stringify(allResponses, null, 2);
+          downloadFile(json, 'reponses_sondage.json', 'application/json');
+        };
+      }
+
+      if(logoutDashboardBtn){
+        logoutDashboardBtn.onclick = () => {
+          sessionStorage.removeItem('admin_authed_v2');
+          closeAdminDashboard();
+          ADMIN_AUTHED = false;
+          alert('Déconnecté');
+        };
+      }
+    }
+
+    function convertToCsv(responses){
+      const header = ['Date/Heure', 'Offre', 'Mention', 'Type Mention', 'Temps Réponse (s)', 'IP', 'Session ID'];
+      const rows = responses.map(r => [
+        new Date(r.timestamp).toLocaleString('fr-FR'),
+        r.offerId,
+        r.mention,
+        r.mentionType || '',
+        r.responseTime || '',
+        r.ip || 'unknown',
+        r.sessionId
+      ]);
+
+      const csv = [header, ...rows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
+        .join('\n');
+
+      return csv;
+    }
+
+    function downloadFile(content, filename, type){
+      const blob = new Blob([content], {type: type + ';charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    // ===== START APP =====
+    init();
   </script>
 </body>
 </html>
