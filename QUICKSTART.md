@@ -73,7 +73,7 @@ Les valeurs viennent de l'étape 2.
     ".write": false,
     "responses": {
       ".write": true,
-      ".read": "root.auth.uid !== null"
+      ".read": true
     }
   }
 }

@@ -147,6 +147,11 @@
     .admin-stat-card h3{margin:0 0 8px;font-size:13px;color:var(--muted);font-weight:500}
     .admin-stat-card .value{font-size:24px;font-weight:800;color:#0b2b4a}
     .admin-stat-card .subtext{font-size:12px;color:var(--muted);margin-top:4px}
+    
+    /* Checkbox styles */
+    input[type="checkbox"]{cursor:pointer;width:18px;height:18px}
+    .admin-table input[type="checkbox"]{margin:0;padding:0}
+    .admin-table tbody tr.selected{background:rgba(255,122,0,0.1)}
   </style>
   <!-- Embedded fallback config (used if loading config.txt fails in the browser) -->
   <script id="embedded-config" type="application/json">
@@ -293,6 +298,7 @@
         <button id="resetFilterBtn" class="secondary">Réinitialiser</button>
         <button id="exportCsvBtn" class="secondary">📥 Exporter CSV</button>
         <button id="exportJsonBtn" class="secondary">📋 Exporter JSON</button>
+        <button id="deleteSelectedBtn" class="secondary" style="background:#ff3b30;color:#fff;border-color:#ff3b30">🗑️ Supprimer sélection</button>
         <button id="logoutDashboardBtn" class="secondary">Déconnexion</button>
       </div>
 
@@ -300,6 +306,7 @@
         <table class="admin-table">
           <thead>
             <tr>
+              <th style="width:40px"><input type="checkbox" id="selectAllCheckbox"></th>
               <th>Date/Heure</th>
               <th>Offre</th>
               <th>Mention</th>
@@ -309,7 +316,7 @@
             </tr>
           </thead>
           <tbody id="adminTableBody">
-            <tr><td colspan="6" style="text-align:center;color:var(--muted)">Aucune réponse</td></tr>
+            <tr><td colspan="7" style="text-align:center;color:var(--muted)">Aucune réponse</td></tr>
           </tbody>
         </table>
       </div>
@@ -683,17 +690,19 @@
       // Populate table
       const tbody = document.getElementById('adminTableBody');
       if(responses.length === 0){
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted)">Aucune réponse</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted)">Aucune réponse</td></tr>';
         return;
       }
 
       tbody.innerHTML = responses
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-        .map(r => {
+        .map((r, idx) => {
           const dt = new Date(r.timestamp).toLocaleString('fr-FR');
           const mention = r.mention === 'oui' ? '✓ ' + (r.mentionType || '') : '-';
           const time = typeof r.responseTime === 'number' ? r.responseTime.toFixed(2) : '-';
-          return `<tr>
+          const uniqueKey = r.sessionId + '_' + r.timestamp;
+          return `<tr data-key="${uniqueKey}">
+            <td><input type="checkbox" class="row-checkbox" value="${uniqueKey}"></td>
             <td>${dt}</td>
             <td>${r.offerId}</td>
             <td>${mention}</td>
@@ -704,8 +713,87 @@
         })
         .join('');
 
+      // Setup checkbox handlers
+      setupCheckboxHandlers(responses);
+
       // Wire up export/filter buttons
       wireAdminButtons(responses);
+    }
+
+    function setupCheckboxHandlers(allResponses){
+      const selectAll = document.getElementById('selectAllCheckbox');
+      const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+      
+      if(selectAll){
+        selectAll.addEventListener('change', () => {
+          rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+          updateRowStyles();
+        });
+      }
+
+      rowCheckboxes.forEach(cb => {
+        cb.addEventListener('change', () => {
+          const allChecked = Array.from(rowCheckboxes).every(c => c.checked);
+          const someChecked = Array.from(rowCheckboxes).some(c => c.checked);
+          if(selectAll) selectAll.checked = allChecked;
+          if(selectAll) selectAll.indeterminate = someChecked && !allChecked;
+          updateRowStyles();
+        });
+      });
+    }
+
+    function updateRowStyles(){
+      const rowCheckboxes = document.querySelectorAll('.row-checkbox');
+      rowCheckboxes.forEach(cb => {
+        const row = cb.closest('tr');
+        if(cb.checked) row.classList.add('selected');
+        else row.classList.remove('selected');
+      });
+    }
+
+    async function deleteSelectedRows(){
+      const rowCheckboxes = Array.from(document.querySelectorAll('.row-checkbox')).filter(cb => cb.checked);
+      if(rowCheckboxes.length === 0){
+        alert('Veuillez sélectionner au moins une réponse à supprimer');
+        return;
+      }
+
+      const confirmDelete = confirm(`Êtes-vous sûr? Vous allez supprimer ${rowCheckboxes.length} réponse(s).`);
+      if(!confirmDelete) return;
+
+      const keysToDelete = rowCheckboxes.map(cb => cb.value);
+      let localData = JSON.parse(localStorage.getItem('local_submissions') || '[]');
+      
+      keysToDelete.forEach(key => {
+        const [sessionId, timestamp] = key.split('_').slice(0, -1).join('_').split('_');
+        localData = localData.filter(r => !(r.sessionId === sessionId && r.timestamp.endsWith(timestamp.split('_').pop())));
+      });
+
+      localStorage.setItem('local_submissions', JSON.stringify(localData));
+
+      // Delete from Firebase
+      if(FIREBASE_ENABLED){
+        try{
+          const snap = await FIREBASE_DB.ref('responses').once('value');
+          if(snap.exists()){
+            snap.forEach(child => {
+              const r = child.val();
+              keysToDelete.forEach(key => {
+                const parts = key.split('_');
+                const timestamp = parts[parts.length - 1];
+                if(r.sessionId && r.timestamp && r.timestamp.includes(timestamp)){
+                  FIREBASE_DB.ref('responses/' + child.key).remove();
+                }
+              });
+            });
+          }
+        }catch(e){
+          console.error('Error deleting from Firebase:', e);
+        }
+      }
+
+      alert(`${rowCheckboxes.length} réponse(s) supprimée(s)`);
+      loadAdminData();
     }
 
     function wireAdminButtons(allResponses){
@@ -713,6 +801,7 @@
       const resetFilterBtn = document.getElementById('resetFilterBtn');
       const exportCsvBtn = document.getElementById('exportCsvBtn');
       const exportJsonBtn = document.getElementById('exportJsonBtn');
+      const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
       const logoutDashboardBtn = document.getElementById('logoutDashboardBtn');
 
       const filterStartDate = document.getElementById('filterStartDate');
@@ -762,6 +851,10 @@
           const json = JSON.stringify(allResponses, null, 2);
           downloadFile(json, 'reponses_sondage.json', 'application/json');
         };
+      }
+
+      if(deleteSelectedBtn){
+        deleteSelectedBtn.onclick = deleteSelectedRows;
       }
 
       if(logoutDashboardBtn){

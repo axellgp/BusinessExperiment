@@ -103,7 +103,7 @@ Réglez sur:
     ".write": false,
     "responses": {
       ".write": true,
-      ".read": "root.auth.uid !== null"
+      ".read": true
     }
   }
 }

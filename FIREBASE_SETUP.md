@@ -84,7 +84,7 @@ Dans Firebase Console, allez à **"Realtime Database"** → **"Règles"**, rempl
     ".write": false,
     "responses": {
       ".write": true,
-      ".read": "root.auth.uid !== null"
+      ".read": true
     }
   }
 }
