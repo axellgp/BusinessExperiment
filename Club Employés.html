@@ -296,6 +296,7 @@
         </select>
         <button id="applyFilterBtn">Appliquer filtres</button>
         <button id="resetFilterBtn" class="secondary">Réinitialiser</button>
+        <button id="refreshDataBtn" class="secondary">🔄 Rafraîchir</button>
         <button id="exportCsvBtn" class="secondary">📥 Exporter CSV</button>
         <button id="exportJsonBtn" class="secondary">📋 Exporter JSON</button>
         <button id="deleteSelectedBtn" class="secondary" style="background:#ff3b30;color:#fff;border-color:#ff3b30">🗑️ Supprimer sélection</button>
@@ -352,15 +353,18 @@
       }catch(e){ CLIENT_IP = 'unknown'; }
     }
 
-    // Initialize Firebase
     async function initFirebase(fbConfig){
       try{
+        console.log('🔥 Initialisation Firebase avec config:', {
+          projectId: fbConfig.projectId,
+          databaseURL: fbConfig.databaseURL
+        });
         const app = firebase.initializeApp(fbConfig, 'admin-app');
         FIREBASE_DB = firebase.database(app);
         FIREBASE_ENABLED = true;
-        console.log('Firebase initialized');
+        console.log('✅ Firebase initialisé avec succès!');
       }catch(e){
-        console.warn('Firebase init failed:', e);
+        console.warn('⚠️ Erreur Firebase init:', e);
         FIREBASE_ENABLED = false;
       }
     }
@@ -387,15 +391,16 @@
     // Submit response to Firebase
     async function submitToFirebase(payload){
       if(!FIREBASE_ENABLED){
-        console.warn('Firebase not enabled');
+        console.warn('⚠️ Firebase pas disponible');
         return;
       }
       try{
+        console.log('📤 Envoi vers Firebase:', payload);
         const ref = FIREBASE_DB.ref('responses').push();
         await ref.set(payload);
-        console.log('Response submitted to Firebase');
+        console.log('✅ Réponse sauvegardée Firebase (ID:', ref.key + ')');
       }catch(e){
-        console.error('Firebase submission failed:', e);
+        console.error('❌ Erreur Firebase:', e);
       }
     }
 
@@ -635,32 +640,67 @@
 
     async function loadAdminData(){
       let responses = [];
+      const fbResponses = [];
+      const localResponses = [];
 
       // Load from Firebase
       if(FIREBASE_ENABLED){
         try{
+          console.log('📥 Chargement depuis Firebase...');
           const snap = await FIREBASE_DB.ref('responses').once('value');
           if(snap.exists()){
             snap.forEach(child => {
-              responses.push(child.val());
+              const data = child.val();
+              fbResponses.push({...data, firebaseKey: child.key});
+              responses.push({...data, firebaseKey: child.key, source: 'firebase'});
+              console.log('  ✅ Firebase:', data.timestamp, '|', data.offerId, '| Session:', data.sessionId);
             });
+            console.log(`📊 Total Firebase: ${fbResponses.length} réponses`);
+          } else {
+            console.log('⚠️ Aucune donnée dans Firebase');
           }
         }catch(e){
-          console.error('Error loading from Firebase:', e);
+          console.error('❌ Erreur Firebase:', e);
         }
+      } else {
+        console.warn('⚠️ Firebase désactivé');
       }
 
       // Merge with local storage
       const localData = JSON.parse(localStorage.getItem('local_submissions') || '[]');
-      responses = responses.concat(localData);
+      console.log(`📱 Local storage: ${localData.length} réponses`);
+      localData.forEach(r => {
+        localResponses.push(r);
+        console.log('  📱 Local:', r.timestamp, '|', r.offerId, '| Session:', r.sessionId);
+      });
 
-      // Remove duplicates by sessionId+timestamp
+      // Remove duplicates - prioritize Firebase over local
       const seen = new Set();
       responses = responses.filter(r => {
         const key = r.sessionId + '_' + r.timestamp;
-        if(seen.has(key)) return false;
+        if(seen.has(key)){
+          console.log(`  🔄 Doublon détecté et supprimé: ${key}`);
+          return false;
+        }
         seen.add(key);
         return true;
+      });
+
+      // Add local data that's not already in Firebase
+      localData.forEach(r => {
+        const key = r.sessionId + '_' + r.timestamp;
+        if(!seen.has(key)){
+          responses.push({...r, source: 'local'});
+          seen.add(key);
+          console.log(`  ➕ Ajout du local storage: ${key}`);
+        }
+      });
+
+      console.log(`🎯 Total final après déduplication: ${responses.length} réponses`);
+      console.log('📋 Résumé source:', {
+        firebase: fbResponses.length,
+        local: localResponses.length,
+        final: responses.length
       });
 
       displayAdminData(responses);
@@ -672,12 +712,15 @@
       let sumResponseTime = 0;
       let countWithTime = 0;
 
-      responses.forEach(r => {
+      console.log('📊 Affichage de', responses.length, 'réponses');
+
+      responses.forEach((r, idx) => {
         totalByOffer[r.offerId] = (totalByOffer[r.offerId] || 0) + 1;
         if(typeof r.responseTime === 'number'){
           sumResponseTime += r.responseTime;
           countWithTime++;
         }
+        console.log(`  [${idx + 1}] ${r.timestamp} - ${r.offerId} (IP: ${r.ip}, Session: ${r.sessionId})`);
       });
 
       document.getElementById('statTotal').textContent = responses.length;
@@ -762,43 +805,63 @@
       if(!confirmDelete) return;
 
       const keysToDelete = rowCheckboxes.map(cb => cb.value);
+      console.log(`🗑️ Suppression de ${keysToDelete.length} réponse(s):`, keysToDelete);
+
+      // Delete from local storage
       let localData = JSON.parse(localStorage.getItem('local_submissions') || '[]');
+      const originalCount = localData.length;
       
       keysToDelete.forEach(key => {
-        const [sessionId, timestamp] = key.split('_').slice(0, -1).join('_').split('_');
-        localData = localData.filter(r => !(r.sessionId === sessionId && r.timestamp.endsWith(timestamp.split('_').pop())));
+        localData = localData.filter(r => {
+          const rowKey = r.sessionId + '_' + r.timestamp;
+          return rowKey !== key;
+        });
       });
 
+      const deletedLocal = originalCount - localData.length;
       localStorage.setItem('local_submissions', JSON.stringify(localData));
+      console.log(`✅ ${deletedLocal} réponse(s) supprimée(s) du local storage`);
 
-      // Delete from Firebase
+      // Delete from Firebase (improved matching)
       if(FIREBASE_ENABLED){
         try{
+          console.log('🗑️ Suppression depuis Firebase...');
           const snap = await FIREBASE_DB.ref('responses').once('value');
           if(snap.exists()){
+            let deletedFromFb = 0;
             snap.forEach(child => {
               const r = child.val();
-              keysToDelete.forEach(key => {
-                const parts = key.split('_');
-                const timestamp = parts[parts.length - 1];
-                if(r.sessionId && r.timestamp && r.timestamp.includes(timestamp)){
-                  FIREBASE_DB.ref('responses/' + child.key).remove();
-                }
-              });
+              const rowKey = r.sessionId + '_' + r.timestamp;
+              
+              if(keysToDelete.includes(rowKey)){
+                console.log(`  → Suppression Firebase ID: ${child.key}`, r);
+                FIREBASE_DB.ref('responses/' + child.key).remove().then(() => {
+                  console.log(`  ✅ Supprimé: ${child.key}`);
+                  deletedFromFb++;
+                }).catch(err => {
+                  console.error(`  ❌ Erreur suppression ${child.key}:`, err);
+                });
+              }
             });
+            console.log(`📊 ${deletedFromFb} réponse(s) marquées pour suppression Firebase`);
           }
         }catch(e){
-          console.error('Error deleting from Firebase:', e);
+          console.error('❌ Erreur Firebase:', e);
         }
       }
 
       alert(`${rowCheckboxes.length} réponse(s) supprimée(s)`);
-      loadAdminData();
+      // Reload after a short delay to let Firebase sync
+      setTimeout(() => {
+        console.log('🔄 Rechargement des données...');
+        loadAdminData();
+      }, 500);
     }
 
     function wireAdminButtons(allResponses){
       const applyFilterBtn = document.getElementById('applyFilterBtn');
       const resetFilterBtn = document.getElementById('resetFilterBtn');
+      const refreshDataBtn = document.getElementById('refreshDataBtn');
       const exportCsvBtn = document.getElementById('exportCsvBtn');
       const exportJsonBtn = document.getElementById('exportJsonBtn');
       const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
@@ -836,6 +899,13 @@
           filterEndDate.value = '';
           filterOffer.value = '';
           displayAdminData(allResponses);
+        };
+      }
+
+      if(refreshDataBtn){
+        refreshDataBtn.onclick = () => {
+          console.log('🔄 Rafraîchissement manuel des données...');
+          loadAdminData();
         };
       }
 
