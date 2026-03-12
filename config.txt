@@ -1,6 +1,6 @@
 {
   "random_order": true,
-  "mention_allowed_on": "hyver",
+  "mention_allowed_on": "hiver",
   "mention_probability": 0.6666667,
   "admin_password": "aqsl",
   "collector_endpoint": "firebase",
@@ -16,12 +16,12 @@
   "mentions": [
     { "text": "✨ Le Favoris de L'équipe ✨", "color": "#ff7a00" },
     { "text": "🔥 Promo", "color": "#ff3b30" },
-    { "text": "⭐ Exclusif ⭐", "color": "#06b6d4" }
+    { "text": "⭐ Offre Exclusive ⭐", "color": "#06b6d4" }
   ],
   "offers": [
     {
-      "id": "hyver",
-      "season": "hyver",
+      "id": "hiver",
+      "season": "hiver",
       "title": "Vacance d'Hiver",
       "desc": "Départ Hiver 2027",
       "image": "./glob.jpeg"
