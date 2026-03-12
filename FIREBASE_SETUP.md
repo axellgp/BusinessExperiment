@@ -85,14 +85,19 @@ Dans Firebase Console, allez à **"Realtime Database"** → **"Règles"**, rempl
     "responses": {
       ".write": true,
       ".read": true
+    },
+    "questionnaire_responses": {
+      ".write": true,
+      ".read": true
     }
   }
 }
 ```
 
 Cela permet:
-- ✅ Tout le monde peut écrire les réponses (soumettre le formulaire)
-- 🔒 Seuls les utilisateurs authentifiés peuvent lire les données
+- ✅ Tout le monde peut écrire les réponses ET les questionnaires (soumettre le formulaire)
+- ✅ Tout le monde peut lire les données (pour l'admin)
+- 🔒 Les données sont accessibles anonymement pour cette expérience
 
 ### Authentification admin
 
