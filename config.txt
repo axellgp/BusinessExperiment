@@ -44,72 +44,71 @@
       "id": "pre_q1",
       "type": "choice",
       "optional": true,
-      "question": "Comment avez-vous entendu parler de cette offre ?",
+      "question": "Laquelle de ces offres vous intéresse le plus ?",
       "options": [
-        ""
-        ]
-    },
-    {
-      "id": "pre_q2",
-      "type": "text",
-      "optional": true,
-      "question": "Quel est votre poste ?",
-      "placeholder": "Etudiant/Salarié/Autre"
+        "Hiver",
+        "Été"
+      ]
     }
   ],
   "video": {
-    "title": "Présentation de nos offres",
-    "description": "Découvrez nos meilleures destinations en vidéo",
-    "placeholder": "Vidéo à intégrer ici",
-    "url": "https://www.youtube.com/watch?v=vJG698U2Mvo"
+    "title": "Test d'attention visual",
+    "description": "Regardez attentivement cette vidéo",
+    "url": "https://www.youtube.com/embed/vJG698U2Mvo"
+  },
+  "challenge": {
+    "title": "Défi d'attention",
+    "subtitle": "Faites bien attention aux détails !",
+    "description": "Les détails vont être importants pour la prochaine étape"
   },
   "questions": [
     {
-      "id": "q1",
-      "type": "text",
-      "question": "Quel est votre nom complet ?",
-      "placeholder": "Entrez votre nom..."
-    },
-    {
-      "id": "q2",
-      "type": "text",
-      "question": "Quel est votre email ?",
-      "placeholder": "votre.email@example.com"
-    },
-    {
-      "id": "q3",
-      "type": "range",
-      "question": "Quel est votre âge ?",
-      "min": 18,
-      "max": 80,
-      "unit": "ans"
-    },
-    {
-      "id": "q4",
-      "type": "choice",
-      "question": "Comment avez-vous entendu parler de cette offre ?",
-      "options": [
-        "Email d'entreprise",
-        "Intranet",
-        "Collègues",
-        "Réseaux sociaux",
-        "Autre"
-      ]
-    },
-    {
-      "id": "q5",
+      "id": "affect_q1",
       "type": "slider",
-      "question": "Êtes-vous satisfait de votre expérience ? (0 = Pas du tout, 10 = Très satisfait)",
+      "category": "Affection",
+      "question": "Cette offre de vacances me donne-t-elle envie de partir en vacances ?",
       "min": 0,
-      "max": 10,
-      "step": 1
+      "max": 10
     },
     {
-      "id": "q6",
-      "type": "text",
-      "question": "Y a-t-il quelque chose que vous aimeriez améliorer ?",
-      "placeholder": "Vos suggestions...",
-      "optional": true
+      "id": "antic_q1",
+      "type": "slider",
+      "category": "Anticipation",
+      "question": "Cette offre me donne envie d'organiser mes vacances avec mon CE",
+      "min": 0,
+      "max": 10
+    },
+    {
+      "id": "att_q1",
+      "type": "slider",
+      "category": "Attention",
+      "question": "J'ai pris conscience de la différence entre les offres",
+      "min": 0,
+      "max": 10
+    },
+    {
+      "id": "att_q2",
+      "type": "slider",
+      "category": "Attention",
+      "question": "Une offre me semblait bien plus intéressante que l'autre",
+      "min": 0,
+      "max": 10
+    },
+    {
+      "id": "comp_q1",
+      "type": "slider",
+      "category": "Comportement",
+      "question": "Cette proposition d'offres est réaliste",
+      "min": 0,
+      "max": 10
+    },
+    {
+      "id": "intent_q1",
+      "type": "slider",
+      "category": "Intention",
+      "question": "Cette offre me donne envie de partir en vacances pendant une période particulière",
+      "min": 0,
+      "max": 10
     }
   ]
 }
