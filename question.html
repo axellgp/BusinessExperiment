@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Questions — Club Employés</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23ff7a00'/%3E%3Ctext x='50' y='57' font-size='32' text-anchor='middle' fill='white' font-family='Arial' font-weight='700'%3ECSE%3C/text%3E%3C/svg%3E" />
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <style>
+    :root{--bg:#f5f6f8;--card:#fff;--accent:#ff7a00;--muted:#6b7280;--nav:#0b2b4a;--accent-light:#ffb56b}
+    
+    html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;background:var(--bg);color:var(--nav)}
+    
+    .questions-container{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg, #f5f6f8 0%, #faf9f7 100%)}
+    
+    .questions-card{background:var(--card);border-radius:20px;padding:40px;max-width:600px;width:100%;box-shadow:0 12px 40px rgba(11,43,74,0.12);border:1px solid rgba(11,43,74,0.04);position:relative;overflow:hidden}
+    
+    .questions-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg, var(--accent), var(--accent-light));animation:slideIn 0.6s ease-out}
+    
+    .header-questions{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+    .logo-q{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-light));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;box-shadow:0 4px 12px rgba(255,122,0,0.25)}
+    .header-text-q{display:flex;flex-direction:column}
+    .header-text-q h1{margin:0;font-size:20px;font-weight:800;color:var(--nav)}
+    .header-text-q p{margin:4px 0 0;font-size:13px;color:var(--muted)}
+    
+    .progress-bar{width:100%;height:6px;background:#e8e8e8;border-radius:10px;margin-bottom:24px;overflow:hidden}
+    .progress-fill{height:100%;background:linear-gradient(90deg, var(--accent), var(--accent-light));width:0%;transition:width 0.4s ease}
+    
+    .question-item{opacity:0;animation:fadeInUp 0.5s ease forwards}
+    .question-item:nth-child(2){animation-delay:0.1s}
+    .question-item:nth-child(3){animation-delay:0.2s}
+    
+    .question-block{margin-bottom:28px}
+    .question-label{font-weight:700;font-size:15px;color:var(--nav);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+    .label-badge{background:var(--accent);color:#fff;font-size:11px;padding:2px 8px;border-radius:8px;font-weight:600}
+    
+    /* Text input */
+    .text-input{width:100%;padding:12px 14px;border:1.5px solid rgba(11,43,74,0.12);border-radius:12px;font-size:14px;font-family:inherit;transition:all 0.3s;background:#fff}
+    .text-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,122,0,0.1)}
+    .text-input::placeholder{color:var(--muted)}
+    
+    /* Range input (número entre 2) */
+    .range-container{display:flex;align-items:center;gap:12px}
+    .range-input{flex:1;height:6px;border-radius:10px;background:linear-gradient(to right, #e8e8e8 0%, #e8e8e8 100%);outline:none;-webkit-appearance:none;appearance:none;background:rgba(11,43,74,0.08)}
+    .range-input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-light));cursor:pointer;box-shadow:0 2px 6px rgba(255,122,0,0.3);transition:all 0.2s}
+    .range-input::-webkit-slider-thumb:hover{transform:scale(1.15);box-shadow:0 4px 12px rgba(255,122,0,0.4)}
+    .range-input::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-light));cursor:pointer;border:none;box-shadow:0 2px 6px rgba(255,122,0,0.3);transition:all 0.2s}
+    .range-input::-moz-range-thumb:hover{transform:scale(1.15);box-shadow:0 4px 12px rgba(255,122,0,0.4)}
+    .range-value{min-width:50px;text-align:center;font-weight:700;font-size:16px;color:var(--accent);background:rgba(255,122,0,0.1);padding:6px 12px;border-radius:8px;border:1px solid rgba(255,122,0,0.2)}
+    
+    /* Slider */
+    .slider-container{display:flex;align-items:center;gap:12px}
+    .slider-input{flex:1;height:8px;border-radius:12px;background:linear-gradient(to right, rgba(11,43,74,0.06), rgba(11,43,74,0.06));outline:none;-webkit-appearance:none;appearance:none}
+    .slider-input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-light));cursor:pointer;box-shadow:0 4px 12px rgba(255,122,0,0.3);transition:all 0.2s}
+    .slider-input::-webkit-slider-thumb:hover{transform:scale(1.2);box-shadow:0 6px 16px rgba(255,122,0,0.4)}
+    .slider-input::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-light));cursor:pointer;border:none;box-shadow:0 4px 12px rgba(255,122,0,0.3);transition:all 0.2s}
+    .slider-input::-moz-range-thumb:hover{transform:scale(1.2);box-shadow:0 6px 16px rgba(255,122,0,0.4)}
+    .slider-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px;padding:0 4px}
+    .slider-value-display{min-width:45px;text-align:center;font-weight:700;font-size:18px;color:var(--accent);background:rgba(255,122,0,0.1);padding:8px 14px;border-radius:10px;border:1.5px solid rgba(255,122,0,0.2)}
+    
+    /* Buttons */
+    .button-group{display:flex;gap:12px;margin-top:32px}
+    .btn{padding:12px 20px;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;transition:all 0.3s;flex:1}
+    .btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent-light));color:#fff;box-shadow:0 4px 12px rgba(255,122,0,0.25)}
+    .btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,122,0,0.35)}
+    .btn-primary:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+    .btn-secondary{background:#fff;color:var(--nav);border:1.5px solid rgba(11,43,74,0.15);box-shadow:0 2px 8px rgba(11,43,74,0.04)}
+    .btn-secondary:hover{background:rgba(11,43,74,0.02);border-color:rgba(11,43,74,0.25);transform:translateY(-1px)}
+    
+    .success-message{display:none;text-align:center;padding:20px;background:rgba(34,197,94,0.1);border:1.5px solid rgba(34,197,94,0.3);border-radius:12px;margin-top:16px;color:#166534;font-weight:600;animation:slideUp 0.4s ease}
+    
+    /* Optional badge */
+    .optional{font-size:12px;color:var(--muted);font-weight:400}
+    
+    @keyframes fadeInUp{
+      from{opacity:0;transform:translateY(16px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+    
+    @keyframes slideIn{
+      from{width:0}
+      to{width:100%}
+    }
+    
+    @keyframes slideUp{
+      from{opacity:0;transform:translateY(8px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+    
+    @media (max-width:600px){
+      .questions-card{padding:24px}
+      .header-text-q h1{font-size:18px}
+      .question-block{margin-bottom:20px}
+      .button-group{flex-direction:column-reverse}
+      .btn{width:100%}
+    }
+  </style>
+</head>
+<body>
+  <div class="questions-container">
+    <div class="questions-card">
+      <div class="header-questions">
+        <div class="logo-q">📋</div>
+        <div class="header-text-q">
+          <h1>Vos impressions</h1>
+          <p>Aidez-nous à améliorer l'expérience</p>
+        </div>
+      </div>
+      
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      
+      <form id="questionsForm">
+        <div id="questionsContainer"></div>
+        
+        <div class="button-group">
+          <button type="button" class="btn btn-secondary" id="backBtn">Retour</button>
+          <button type="submit" class="btn btn-primary" id="submitBtn">Soumettre</button>
+        </div>
+      </form>
+      
+      <div class="success-message" id="successMessage">
+        ✓ Merci pour vos réponses ! Elles nous aident beaucoup.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let CONFIG = null;
+    let FIREBASE_DB = null;
+    let FIREBASE_ENABLED = false;
+    let CURRENT_OFFER_ID = null;
+    let SESSION_ID = null;
+    let COLLECTION_TIMESTAMP = null;
+
+    // Get session ID and offer ID from URL/session storage
+    async function initPage(){
+      // Get session ID
+      SESSION_ID = sessionStorage.getItem('session_id') || '_unknown';
+      COLLECTION_TIMESTAMP = sessionStorage.getItem('collection_timestamp') || new Date().toISOString();
+      CURRENT_OFFER_ID = sessionStorage.getItem('last_offer_id') || 'unknown';
+
+      console.log('📋 Questions - Session:', SESSION_ID);
+      console.log('📋 Offre sélectionnée:', CURRENT_OFFER_ID);
+      console.log('📋 Timestamp:', COLLECTION_TIMESTAMP);
+
+      // Load config
+      CONFIG = await loadConfig();
+      if(!CONFIG){
+        alert('Config non disponible');
+        return;
+      }
+
+      // Initialize Firebase
+      if(CONFIG.firebase_config){
+        await initFirebase(CONFIG.firebase_config);
+      }
+
+      if(!FIREBASE_ENABLED){
+        console.warn('⚠️ Firebase pas disponible - mode local uniquement');
+      }
+
+      // Render questions
+      renderQuestions();
+    }
+
+    async function loadConfig(){
+      try{
+        const res = await fetch('config.txt', {cache: 'no-store'});
+        if(res.ok){
+          const txt = await res.text();
+          try{ return JSON.parse(txt); }catch(e){ console.warn('config.txt parse error'); }
+        }
+      }catch(e){ console.warn('Could not fetch config.txt'); }
+      return null;
+    }
+
+    async function initFirebase(fbConfig){
+      try{
+        firebase.initializeApp(fbConfig);
+        FIREBASE_DB = firebase.database();
+        FIREBASE_ENABLED = true;
+        console.log('✅ Firebase initialisé');
+      }catch(e){
+        console.warn('⚠️ Firebase init failed:', e);
+        FIREBASE_ENABLED = false;
+      }
+    }
+
+    function renderQuestions(){
+      const container = document.getElementById('questionsContainer');
+      const questions = (CONFIG && CONFIG.questions) || [];
+
+      if(questions.length === 0){
+        container.innerHTML = '<p style="color:var(--muted);text-align:center">Aucune question disponible</p>';
+        return;
+      }
+
+      container.innerHTML = questions.map((q, idx) => {
+        let html = `<div class="question-item">`;
+        html += `<div class="question-block">`;
+        
+        // Label avec type
+        const badgeText = {
+          'text': 'Texte',
+          'range': 'Nombre',
+          'slider': 'Satisfaction'
+        }[q.type] || q.type;
+        
+        html += `<label class="question-label">
+          ${q.question}
+          <span class="label-badge">${badgeText}</span>
+          ${q.optional ? '<span class="optional">(optionnel)</span>' : ''}
+        </label>`;
+        
+        // Input selon type
+        if(q.type === 'text'){
+          html += `<input type="text" 
+            name="${q.id}" 
+            placeholder="${q.placeholder || ''}" 
+            class="text-input"
+            ${q.optional ? '' : 'required'}
+          />`;
+        }
+        else if(q.type === 'range'){
+          html += `<div class="range-container">
+            <input type="range" 
+              name="${q.id}" 
+              min="${q.min}" 
+              max="${q.max}" 
+              value="${q.min}"
+              class="range-input"
+              data-unit="${q.unit || ''}"
+              onchange="updateRangeValue(this)"
+            />
+            <div class="range-value" id="val-${q.id}">${q.min} ${q.unit || ''}</div>
+          </div>`;
+        }
+        else if(q.type === 'slider'){
+          const mid = Math.round((q.min + q.max) / 2);
+          html += `<div class="slider-container">
+            <input type="range" 
+              name="${q.id}" 
+              min="${q.min}" 
+              max="${q.max}" 
+              step="${q.step || 1}"
+              value="${mid}"
+              class="slider-input"
+              data-question-id="${q.id}"
+              onchange="updateSliderValue(this)"
+            />
+            <div class="slider-value-display" id="slider-val-${q.id}">${mid}</div>
+          </div>`;
+          
+          // Labels min/max
+          html += `<div class="slider-labels">
+            <span>${q.min}</span>
+            <span>${q.max}</span>
+          </div>`;
+        }
+        
+        html += `</div></div>`;
+        return html;
+      }).join('');
+
+      // Update progress
+      updateProgress();
+
+      // Wire up form
+      wireFormHandlers(questions);
+    }
+
+    function updateRangeValue(input){
+      const unit = input.getAttribute('data-unit') || '';
+      const valDiv = document.getElementById('val-' + input.name);
+      if(valDiv) valDiv.textContent = input.value + ' ' + unit;
+      updateProgress();
+    }
+
+    function updateSliderValue(input){
+      const valDiv = document.getElementById('slider-val-' + input.name);
+      if(valDiv) valDiv.textContent = input.value;
+      updateProgress();
+    }
+
+    function updateProgress(){
+      const inputs = document.querySelectorAll('input[type="text"], input[type="range"], .slider-input');
+      let filled = 0;
+      inputs.forEach(inp => {
+        if(inp.value && inp.value.trim() !== '') filled++;
+      });
+      const percent = (filled / inputs.length) * 100;
+      document.getElementById('progressFill').style.width = percent + '%';
+    }
+
+    function wireFormHandlers(questions){
+      const form = document.getElementById('questionsForm');
+      const backBtn = document.getElementById('backBtn');
+      const submitBtn = document.getElementById('submitBtn');
+
+      // Back button
+      if(backBtn){
+        backBtn.addEventListener('click', () => {
+          window.history.back();
+        });
+      }
+
+      // Submit
+      if(form){
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          await handleSubmit(questions);
+        });
+      }
+
+      // Update progress on input
+      document.querySelectorAll('input[type="text"]').forEach(inp => {
+        inp.addEventListener('input', updateProgress);
+      });
+    }
+
+    async function handleSubmit(questions){
+      const form = document.getElementById('questionsForm');
+      const formData = new FormData(form);
+      const responses = {};
+
+      questions.forEach(q => {
+        const value = formData.get(q.id);
+        responses[q.id] = value || null;
+      });
+
+      console.log('📤 Réponses collectées:', responses);
+
+      // Prepare payload for Firebase
+      const payload = {
+        timestamp: new Date().toISOString(),
+        sessionId: SESSION_ID,
+        offerId: CURRENT_OFFER_ID,
+        collectionTimestamp: COLLECTION_TIMESTAMP,
+        responses: responses
+      };
+
+      // Submit to Firebase
+      if(FIREBASE_ENABLED){
+        try{
+          console.log('📤 Envoi vers Firebase:', payload);
+          const ref = FIREBASE_DB.ref('questionnaire_responses').push();
+          await ref.set(payload);
+          console.log('✅ Questionnaire sauvegardé (ID:', ref.key + ')');
+        }catch(e){
+          console.error('❌ Erreur Firebase:', e);
+          alert('Erreur lors de la sauvegarde');
+          return;
+        }
+      }
+
+      // Show success message
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '✓ Envoyé';
+      
+      document.getElementById('questionsForm').style.display = 'none';
+      document.getElementById('successMessage').style.display = 'block';
+
+      // Close after 2 seconds
+      setTimeout(() => {
+        window.close();
+      }, 2000);
+    }
+
+    // Start
+    initPage();
+  </script>
+</body>
+</html>

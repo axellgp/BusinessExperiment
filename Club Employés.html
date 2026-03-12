@@ -543,9 +543,21 @@
         console.log('📤 Envoi de la réponse à Firebase:', payload);
         await submitToFirebase(payload);
 
+        // Save offer ID and timestamp to session for questionnaire
+        sessionStorage.setItem('last_offer_id', offer.id);
+        sessionStorage.setItem('collection_timestamp', payload.timestamp);
+
         // Visual feedback
         btn.textContent = 'Merci 😊';
-        setTimeout(() => btn.textContent = 'Choisir cette offre', 900);
+        
+        // Open questionnaire after 3 seconds
+        setTimeout(() => {
+          const questionnaireWindow = window.open('question.html', 'questionnaire', 'width=700,height=900,menubar=no,toolbar=no');
+          if(!questionnaireWindow){
+            console.warn('⚠️ Popup bloquée - tentative d\'ouverture directe');
+            window.location.href = 'question.html';
+          }
+        }, 3000);
       });
 
       a.appendChild(btn);
