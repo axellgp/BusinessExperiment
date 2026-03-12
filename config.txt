@@ -34,6 +34,11 @@
       "image": "./glob.jpeg"
     }
   ],
+  "questionnaire": {
+    "title": "Vos impressions",
+    "subtitle": "Aidez-nous à améliorer l'expérience",
+    "emoji": "📋"
+  },
   "questions": [
     {
       "id": "q1",
@@ -57,6 +62,18 @@
     },
     {
       "id": "q4",
+      "type": "choice",
+      "question": "Comment avez-vous entendu parler de cette offre ?",
+      "options": [
+        "Email d'entreprise",
+        "Intranet",
+        "Collègues",
+        "Réseaux sociaux",
+        "Autre"
+      ]
+    },
+    {
+      "id": "q5",
       "type": "slider",
       "question": "Êtes-vous satisfait de votre expérience ? (0 = Pas du tout, 10 = Très satisfait)",
       "min": 0,
@@ -64,7 +81,7 @@
       "step": 1
     },
     {
-      "id": "q5",
+      "id": "q6",
       "type": "text",
       "question": "Y a-t-il quelque chose que vous aimeriez améliorer ?",
       "placeholder": "Vos suggestions...",

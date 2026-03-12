@@ -8,6 +8,8 @@
   <!-- Firebase SDK v8 (ultra-stable CDN compatibility) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root{--bg:#f5f6f8;--card:#fff;--accent:#ff7a00;--muted:#6b7280;--nav:#0b2b4a}
     html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;background:var(--bg);color:#0b2b4a}
@@ -122,6 +124,37 @@
     
     @keyframes mobilePulse{0%{transform:translateY(0)}50%{transform:translateY(-4px)}100%{transform:translateY(0)}}
     
+    /* Questionnaire styles */
+    .question-item{opacity:0;animation:fadeInUp 0.5s ease forwards}
+    .question-block{margin-bottom:28px}
+    .question-label{font-weight:700;font-size:15px;color:var(--nav);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+    .label-badge{background:var(--accent);color:#fff;font-size:11px;padding:2px 8px;border-radius:8px;font-weight:600}
+    .text-input{width:100%;padding:12px 14px;border:1.5px solid rgba(11,43,74,0.12);border-radius:12px;font-size:14px;font-family:inherit;transition:all 0.3s;background:#fff;box-sizing:border-box}
+    .text-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,122,0,0.1)}
+    .text-input::placeholder{color:var(--muted)}
+    .range-container{display:flex;align-items:center;gap:12px}
+    .range-input{flex:1;height:6px;border-radius:10px;background:rgba(11,43,74,0.08);outline:none;-webkit-appearance:none;appearance:none}
+    .range-input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffb56b);cursor:pointer;box-shadow:0 2px 6px rgba(255,122,0,0.3);transition:all 0.2s}
+    .range-input::-webkit-slider-thumb:hover{transform:scale(1.15)}
+    .range-input::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffb56b);cursor:pointer;border:none;box-shadow:0 2px 6px rgba(255,122,0,0.3);transition:all 0.2s}
+    .range-value{min-width:50px;text-align:center;font-weight:700;font-size:16px;color:var(--accent);background:rgba(255,122,0,0.1);padding:6px 12px;border-radius:8px;border:1px solid rgba(255,122,0,0.2)}
+    .slider-container{display:flex;align-items:center;gap:12px}
+    .slider-input{flex:1;height:8px;border-radius:12px;background:linear-gradient(to right, rgba(11,43,74,0.06), rgba(11,43,74,0.06));outline:none;-webkit-appearance:none;appearance:none}
+    .slider-input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffb56b);cursor:pointer;box-shadow:0 4px 12px rgba(255,122,0,0.3);transition:all 0.2s}
+    .slider-input::-webkit-slider-thumb:hover{transform:scale(1.2)}
+    .slider-input::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffb56b);cursor:pointer;border:none;box-shadow:0 4px 12px rgba(255,122,0,0.3);transition:all 0.2s}
+    .slider-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px;padding:0 4px}
+    .slider-value-display{min-width:45px;text-align:center;font-weight:700;font-size:18px;color:var(--accent);background:rgba(255,122,0,0.1);padding:8px 14px;border-radius:10px;border:1.5px solid rgba(255,122,0,0.2)}
+    .choice-container{display:flex;flex-direction:column;gap:10px}
+    .choice-option{display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,122,0,0.02);border:1.5px solid rgba(11,43,74,0.12);border-radius:12px;cursor:pointer;transition:all 0.3s}
+    .choice-option:hover{background:rgba(255,122,0,0.08);border-color:var(--accent)}
+    .choice-option input[type="radio"]{width:18px;height:18px;cursor:pointer;accent-color:var(--accent);margin:0}
+    .choice-option label{cursor:pointer;flex:1;font-weight:500;margin:0}
+    .choice-option input[type="radio"]:checked + label{color:var(--accent);font-weight:700}
+    .optional{font-size:12px;color:var(--muted);font-weight:400}
+    @keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    
     /* Admin Dashboard Styles */
     .admin-dashboard{display:none;width:100%;height:100%;position:fixed;top:0;left:0;background:#f5f6f8;z-index:100;flex-direction:column;overflow:hidden}
     .admin-dashboard.active{display:flex}
@@ -230,6 +263,36 @@
         <div class="grid" id="grid">
           <!-- Offers will be rendered here from config.txt -->
         </div>
+        
+        <!-- Questionnaire panel (hidden by default) -->
+        <div id="questionnairePanel" style="display:none;width:100%;max-width:600px;margin:0 auto">
+          <div style="background:#fff;border-radius:20px;padding:40px;box-shadow:0 12px 40px rgba(11,43,74,0.12);border:1px solid rgba(11,43,74,0.04)">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+              <div id="q-emoji" style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffb56b);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:24px;box-shadow:0 4px 12px rgba(255,122,0,0.25)"></div>
+              <div style="display:flex;flex-direction:column">
+                <h1 class="questionnaire-title" style="margin:0;font-size:20px;font-weight:800;color:var(--nav)">Vos impressions</h1>
+                <p class="questionnaire-subtitle" style="margin:4px 0 0;font-size:13px;color:var(--muted)">Aidez-nous à améliorer l'expérience</p>
+              </div>
+            </div>
+            
+            <div style="width:100%;height:6px;background:#e8e8e8;border-radius:10px;margin-bottom:24px;overflow:hidden">
+              <div id="questionnaireProgress" style="height:100%;background:linear-gradient(90deg, var(--accent), #ffb56b);width:0%;transition:width 0.4s ease;"></div>
+            </div>
+            
+            <form id="questionnaireForm">
+              <div id="questionsContainer"></div>
+              
+              <div style="display:flex;gap:12px;margin-top:32px">
+                <button type="button" id="questionnaireBackBtn" style="flex:1;padding:12px 20px;border:1.5px solid rgba(11,43,74,0.15);border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;background:#fff;color:var(--nav);transition:all 0.3s">Retour</button>
+                <button type="submit" id="questionnaireSubmitBtn" style="flex:1;padding:12px 20px;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;background:linear-gradient(135deg,var(--accent),#ffb56b);color:#fff;box-shadow:0 4px 12px rgba(255,122,0,0.25);transition:all 0.3s">Soumettre</button>
+              </div>
+            </form>
+            
+            <div id="questionnaireSuccess" style="display:none;text-align:center;padding:20px;background:rgba(34,197,94,0.1);border:1.5px solid rgba(34,197,94,0.3);border-radius:12px;margin-top:16px;color:#166534;font-weight:600;animation:slideUp 0.4s ease">
+              ✓ Merci pour vos réponses ! Elles nous aident beaucoup.
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="configEditorPanel" class="config-editor-panel">
@@ -298,6 +361,7 @@
         <button id="resetFilterBtn" class="secondary">Réinitialiser</button>
         <button id="refreshDataBtn" class="secondary">🔄 Rafraîchir</button>
         <button id="exportCsvBtn" class="secondary">📥 Exporter CSV</button>
+        <button id="exportXlsxBtn" class="secondary">📊 Exporter XLSX</button>
         <button id="exportJsonBtn" class="secondary">📋 Exporter JSON</button>
         <button id="deleteSelectedBtn" class="secondary" style="background:#ff3b30;color:#fff;border-color:#ff3b30">🗑️ Supprimer sélection</button>
         <button id="logoutDashboardBtn" class="secondary">Déconnexion</button>
@@ -310,14 +374,16 @@
               <th style="width:40px"><input type="checkbox" id="selectAllCheckbox"></th>
               <th>Date/Heure</th>
               <th>Offre</th>
+              <th>Position Affichage</th>
               <th>Mention</th>
               <th>Temps de réponse (s)</th>
               <th>IP</th>
               <th>Session ID</th>
+              <th>Questionnaire</th>
             </tr>
           </thead>
           <tbody id="adminTableBody">
-            <tr><td colspan="7" style="text-align:center;color:var(--muted)">Aucune réponse</td></tr>
+            <tr><td colspan="9" style="text-align:center;color:var(--muted)">Aucune réponse</td></tr>
           </tbody>
         </table>
       </div>
@@ -339,6 +405,7 @@
     let SESSION_ID = null;
     let PAGE_LOAD_TIME = Date.now();
     let ADMIN_AUTHED = false;
+    let OFFERS_DISPLAY_ORDER = {}; // Track which offer displayed first/second
 
     // Generate unique session ID
     const generateSessionId = () => '_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
@@ -438,8 +505,9 @@
       // Setup admin
       setupAdminUI();
 
-      // Render offers
-      offers.forEach(o => {
+      // Render offers and track display order
+      offers.forEach((o, idx) => {
+        OFFERS_DISPLAY_ORDER[o.id] = idx + 1; // Position 1, 2, etc
         let mentionObj = null;
         if(o.season === CONFIG.mention_allowed_on && mentions.length){
           const prob = (typeof CONFIG.mention_probability === 'number') ? CONFIG.mention_probability : 0;
@@ -450,6 +518,8 @@
         const card = createCard(o, mentionObj);
         grid.appendChild(card);
       });
+      
+      console.log('📍 Ordre d\'affichage des offres:', OFFERS_DISPLAY_ORDER);
     }
 
     // Shuffle array
@@ -529,6 +599,7 @@
           mention: mention ? 'oui' : 'non',
           mentionType: mention ? (mention.text || '') : '',
           responseTime: Math.round(responseTime * 100) / 100,
+          displayPosition: OFFERS_DISPLAY_ORDER[offer.id] || '?',
           ip: CLIENT_IP || 'unknown',
           sessionId: SESSION_ID
         };
@@ -550,18 +621,238 @@
         // Visual feedback
         btn.textContent = 'Merci 😊';
         
-        // Open questionnaire after 3 seconds
+        // Save offer ID and timestamp to session for questionnaire
+        sessionStorage.setItem('last_offer_id', offer.id);
+        sessionStorage.setItem('collection_timestamp', payload.timestamp);
+
+        // Show questionnaire after 3 seconds
         setTimeout(() => {
-          const questionnaireWindow = window.open('question.html', 'questionnaire', 'width=700,height=900,menubar=no,toolbar=no');
-          if(!questionnaireWindow){
-            console.warn('⚠️ Popup bloquée - tentative d\'ouverture directe');
-            window.location.href = 'question.html';
-          }
+          showQuestionnaire();
         }, 3000);
       });
 
       a.appendChild(btn);
       return a;
+    }
+
+    // ===== QUESTIONNAIRE FUNCTIONS =====
+    function showQuestionnaire(){
+      const grid = document.getElementById('grid');
+      const panel = document.getElementById('questionnairePanel');
+      
+      // Hide offers
+      grid.style.display = 'none';
+      panel.style.display = 'block';
+      
+      // Render questions
+      renderQuestionnaire();
+      
+      // Scroll to top
+      document.querySelector('.main').scrollTop = 0;
+    }
+
+    function renderQuestionnaire(){
+      const container = document.getElementById('questionsContainer');
+      const questions = (CONFIG && CONFIG.questions) || [];
+      const qConfig = (CONFIG && CONFIG.questionnaire) || {title: 'Vos impressions', subtitle: 'Aidez-nous à améliorer', emoji: '📋'};
+
+      if(questions.length === 0){
+        container.innerHTML = '<p style="color:var(--muted);text-align:center">Aucune question disponible</p>';
+        return;
+      }
+
+      // Update title/subtitle/emoji from config
+      const titleElems = document.querySelectorAll('.questionnaire-title');
+      const subtitleElems = document.querySelectorAll('.questionnaire-subtitle');
+      const emojiElem = document.getElementById('q-emoji');
+      
+      titleElems.forEach(el => el.textContent = qConfig.title || 'Vos impressions');
+      subtitleElems.forEach(el => el.textContent = qConfig.subtitle || 'Aidez-nous à améliorer');
+      if(emojiElem) emojiElem.textContent = qConfig.emoji || '📋';
+
+      container.innerHTML = questions.map((q, idx) => {
+        let html = `<div class="question-item">`;
+        html += `<div class="question-block">`;
+        
+        const badgeText = {
+          'text': 'Texte',
+          'range': 'Nombre',
+          'slider': 'Satisfaction',
+          'choice': 'Choix'
+        }[q.type] || q.type;
+        
+        html += `<label class="question-label">
+          ${q.question}
+          <span class="label-badge">${badgeText}</span>
+          ${q.optional ? '<span class="optional">(optionnel)</span>' : ''}
+        </label>`;
+        
+        if(q.type === 'text'){
+          html += `<input type="text" 
+            name="${q.id}" 
+            placeholder="${q.placeholder || ''}" 
+            class="text-input"
+            ${q.optional ? '' : 'required'}
+          />`;
+        }
+        else if(q.type === 'range'){
+          html += `<div class="range-container">
+            <input type="range" 
+              name="${q.id}" 
+              min="${q.min}" 
+              max="${q.max}" 
+              value="${q.min}"
+              class="range-input"
+              data-unit="${q.unit || ''}"
+              data-type="range"
+              onchange="updateRangeValue(this)"
+            />
+            <div class="range-value" id="val-${q.id}">${q.min} ${q.unit || ''}</div>
+          </div>`;
+        }
+        else if(q.type === 'slider'){
+          const mid = Math.round((q.min + q.max) / 2);
+          html += `<div class="slider-container">
+            <input type="range" 
+              name="${q.id}" 
+              min="${q.min}" 
+              max="${q.max}" 
+              step="${q.step || 1}"
+              value="${mid}"
+              class="slider-input"
+              data-type="slider"
+              onchange="updateSliderValue(this)"
+            />
+            <div class="slider-value-display" id="slider-val-${q.id}">${mid}</div>
+          </div>`;
+          html += `<div class="slider-labels">
+            <span>${q.min}</span>
+            <span>${q.max}</span>
+          </div>`;
+        }
+        else if(q.type === 'choice'){
+          html += `<div class="choice-container">`;
+          (q.options || []).forEach((opt, oidx) => {
+            const optId = q.id + '_' + oidx;
+            html += `<label class="choice-option">
+              <input type="radio" name="${q.id}" value="${opt}" id="${optId}" ${q.optional ? '' : 'required'} onchange="updateQuestionnaireProgress()">
+              <label for="${optId}">${opt}</label>
+            </label>`;
+          });
+          html += `</div>`;
+        }
+        
+        html += `</div></div>`;
+        return html;
+      }).join('');
+
+      // Wire up form
+      const form = document.getElementById('questionnaireForm');
+      const backBtn = document.getElementById('questionnaireBackBtn');
+      const submitBtn = document.getElementById('questionnaireSubmitBtn');
+      
+      if(backBtn){
+        backBtn.onclick = () => {
+          document.getElementById('grid').style.display = 'grid';
+          document.getElementById('questionnairePanel').style.display = 'none';
+        };
+      }
+      
+      if(form){
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          await handleQuestionnaireSubmit(questions);
+        };
+      }
+      
+      // Add input listeners
+      document.querySelectorAll('.text-input').forEach(inp => {
+        inp.addEventListener('input', updateQuestionnaireProgress);
+      });
+      
+      updateQuestionnaireProgress();
+    }
+
+    function updateRangeValue(input){
+      const unit = input.getAttribute('data-unit') || '';
+      const valDiv = document.getElementById('val-' + input.name);
+      if(valDiv) valDiv.textContent = input.value + ' ' + unit;
+      updateQuestionnaireProgress();
+    }
+
+    function updateSliderValue(input){
+      const valDiv = document.getElementById('slider-val-' + input.name);
+      if(valDiv) valDiv.textContent = input.value;
+      updateQuestionnaireProgress();
+    }
+
+    function updateQuestionnaireProgress(){
+      const inputs = document.querySelectorAll('#questionnaireForm input[type="text"], #questionnaireForm input[data-type="range"], #questionnaireForm input[data-type="slider"]');
+      const radios = document.querySelectorAll('#questionnaireForm input[type="radio"]');
+      
+      let filled = 0;
+      inputs.forEach(inp => {
+        if(inp.value && inp.value.trim() !== '') filled++;
+      });
+      
+      const radioGroups = {};
+      radios.forEach(r => {
+        radioGroups[r.name] = radioGroups[r.name] || false;
+        if(r.checked) radioGroups[r.name] = true;
+      });
+      filled += Object.values(radioGroups).filter(v => v).length;
+      
+      const totalFields = inputs.length + Object.keys(radioGroups).length;
+      const percent = totalFields > 0 ? (filled / totalFields) * 100 : 0;
+      document.getElementById('questionnaireProgress').style.width = percent + '%';
+    }
+
+    async function handleQuestionnaireSubmit(questions){
+      const form = document.getElementById('questionnaireForm');
+      const formData = new FormData(form);
+      const responses = {};
+      
+      questions.forEach(q => {
+        const value = formData.get(q.id);
+        responses[q.id] = value || null;
+      });
+
+      console.log('📤 Réponses questionnaire:', responses);
+
+      const lastOfferId = sessionStorage.getItem('last_offer_id') || 'unknown';
+      const collectionTimestamp = sessionStorage.getItem('collection_timestamp') || new Date().toISOString();
+
+      const payload = {
+        timestamp: new Date().toISOString(),
+        sessionId: SESSION_ID,
+        offerId: lastOfferId,
+        collectionTimestamp: collectionTimestamp,
+        responses: responses
+      };
+
+      if(FIREBASE_ENABLED){
+        try{
+          console.log('📤 Envoi questionnaire vers Firebase:', payload);
+          const ref = FIREBASE_DB.ref('questionnaire_responses').push();
+          await ref.set(payload);
+          console.log('✅ Questionnaire sauvegardé (ID:', ref.key + ')');
+        }catch(e){
+          console.error('❌ Erreur Firebase:', e);
+          alert('Erreur lors de la sauvegarde');
+          return;
+        }
+      }
+
+      const submitBtn = document.getElementById('questionnaireSubmitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '✓ Envoyé';
+      
+      document.getElementById('questionnaireForm').style.display = 'none';
+      document.getElementById('questionnaireSuccess').style.display = 'block';
+
+      setTimeout(() => {
+        location.reload();
+      }, 2000);
     }
 
     // ===== ADMIN DASHBOARD =====
@@ -661,6 +952,7 @@
 
     async function loadAdminData(){
       let responses = [];
+      let questionnaires = [];
 
       // Load ONLY from Firebase
       if(!FIREBASE_ENABLED){
@@ -670,7 +962,7 @@
       }
 
       try{
-        console.log('📥 Chargement UNIQUEMENT depuis Firebase...');
+        console.log('📥 Chargement des réponses initiales depuis Firebase...');
         const snap = await FIREBASE_DB.ref('responses').once('value');
         
         if(snap.exists()){
@@ -679,9 +971,9 @@
             responses.push({...data, firebaseKey: child.key});
             console.log('  ✅ Firebase:', data.timestamp, '|', data.offerId, '| IP:', data.ip, '| Session:', data.sessionId);
           });
-          console.log(`✅ Total Firebase: ${responses.length} réponses`);
+          console.log(`✅ Total Firebase responses: ${responses.length} réponses`);
         } else {
-          console.log('⚠️ Aucune donnée dans Firebase');
+          console.log('⚠️ Aucune donnée dans Firebase responses');
         }
       }catch(e){
         console.error('❌ Erreur Firebase:', e);
@@ -689,10 +981,41 @@
         return;
       }
 
+      // Load questionnaire responses
+      try{
+        console.log('📥 Chargement des réponses questionnaire depuis Firebase...');
+        const qsnap = await FIREBASE_DB.ref('questionnaire_responses').once('value');
+        
+        if(qsnap.exists()){
+          qsnap.forEach(child => {
+            const data = child.val();
+            questionnaires.push({...data, firebaseKey: child.key});
+            console.log('  ✅ Questionnaire:', data.sessionId, '|', data.collectionTimestamp);
+          });
+          console.log(`✅ Total questionnaires: ${questionnaires.length}`);
+        } else {
+          console.log('⚠️ Aucun questionnaire');
+        }
+      }catch(e){
+        console.warn('⚠️ Erreur chargement questionnaires:', e);
+      }
+
+      // Merge questionnaire responses with initial responses
+      responses = responses.map(r => {
+        const matchingQuestionnaire = questionnaires.find(q => 
+          q.sessionId === r.sessionId && 
+          q.collectionTimestamp === r.timestamp
+        );
+        return {
+          ...r,
+          questionnaireResponses: matchingQuestionnaire ? matchingQuestionnaire.responses : null
+        };
+      });
+
       // Sort by timestamp (newest first)
       responses.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-      console.log(`🎯 Total final: ${responses.length} réponses (source: Firebase UNIQUEMENT)`);
+      console.log(`🎯 Total final: ${responses.length} réponses (avec questionnaires merged)`);
       displayAdminData(responses);
     }
 
@@ -723,7 +1046,7 @@
       // Populate table
       const tbody = document.getElementById('adminTableBody');
       if(responses.length === 0){
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted)">Aucune réponse</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted)">Aucune réponse</td></tr>';
         return;
       }
 
@@ -733,15 +1056,20 @@
           const dt = new Date(r.timestamp).toLocaleString('fr-FR');
           const mention = r.mention === 'oui' ? '✓ ' + (r.mentionType || '') : '-';
           const time = typeof r.responseTime === 'number' ? r.responseTime.toFixed(2) : '-';
+          const position = r.displayPosition === 1 ? '1ère' : r.displayPosition === 2 ? '2e' : (r.displayPosition || '-');
           const uniqueKey = r.sessionId + '_' + r.timestamp;
+          const questionnaire = r.questionnaireResponses ? '✓ Complété' : '⏳ En attente';
+          const questionnaireColor = r.questionnaireResponses ? '#10b981' : '#f59e0b';
           return `<tr data-key="${uniqueKey}">
             <td><input type="checkbox" class="row-checkbox" value="${uniqueKey}"></td>
             <td>${dt}</td>
             <td>${r.offerId}</td>
+            <td style="text-align:center;font-weight:600">${position}</td>
             <td>${mention}</td>
             <td>${time}</td>
             <td>${r.ip}</td>
             <td><code style="font-size:11px">${r.sessionId}</code></td>
+            <td><span style="color:${questionnaireColor};font-weight:600">${questionnaire}</span></td>
           </tr>`;
         })
         .join('');
@@ -843,6 +1171,7 @@
       const refreshDataBtn = document.getElementById('refreshDataBtn');
       const exportCsvBtn = document.getElementById('exportCsvBtn');
       const exportJsonBtn = document.getElementById('exportJsonBtn');
+      const exportXlsxBtn = document.getElementById('exportXlsxBtn');
       const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
       const logoutDashboardBtn = document.getElementById('logoutDashboardBtn');
 
@@ -895,6 +1224,12 @@
         };
       }
 
+      if(exportXlsxBtn){
+        exportXlsxBtn.onclick = () => {
+          convertToXlsx(allResponses);
+        };
+      }
+
       if(exportJsonBtn){
         exportJsonBtn.onclick = () => {
           const json = JSON.stringify(allResponses, null, 2);
@@ -917,22 +1252,95 @@
     }
 
     function convertToCsv(responses){
-      const header = ['Date/Heure', 'Offre', 'Mention', 'Type Mention', 'Temps Réponse (s)', 'IP', 'Session ID'];
-      const rows = responses.map(r => [
-        new Date(r.timestamp).toLocaleString('fr-FR'),
-        r.offerId,
-        r.mention,
-        r.mentionType || '',
-        r.responseTime || '',
-        r.ip || 'unknown',
-        r.sessionId
-      ]);
+      // Build headers
+      let header = ['Date/Heure', 'Offre', 'Position Affichage', 'Mention', 'Type Mention', 'Temps Réponse (s)', 'IP', 'Session ID'];
+      
+      // Get all unique question IDs from responses
+      const allQuestionIds = new Set();
+      responses.forEach(r => {
+        if(r.questionnaireResponses){
+          Object.keys(r.questionnaireResponses).forEach(qId => allQuestionIds.add(qId));
+        }
+      });
+      
+      // Sort question IDs and add to header
+      const sortedQuestionIds = Array.from(allQuestionIds).sort();
+      header = [...header, ...sortedQuestionIds];
+      
+      const rows = responses.map(r => {
+        let row = [
+          new Date(r.timestamp).toLocaleString('fr-FR'),
+          r.offerId,
+          (r.displayPosition === 1 ? '1ère' : r.displayPosition === 2 ? '2e' : r.displayPosition) || '-',
+          r.mention,
+          r.mentionType || '',
+          r.responseTime || '',
+          r.ip || 'unknown',
+          r.sessionId
+        ];
+        
+        // Add questionnaire answers
+        sortedQuestionIds.forEach(qId => {
+          const answerValue = r.questionnaireResponses && r.questionnaireResponses[qId] ? r.questionnaireResponses[qId] : '';
+          row.push(answerValue);
+        });
+        
+        return row;
+      });
 
       const csv = [header, ...rows]
         .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
         .join('\n');
 
       return csv;
+    }
+
+    function convertToXlsx(responses){
+      // Build headers
+      let header = ['Date/Heure', 'Offre', 'Position Affichage', 'Mention', 'Type Mention', 'Temps Réponse (s)', 'IP', 'Session ID'];
+      
+      // Get all unique question IDs from responses
+      const allQuestionIds = new Set();
+      responses.forEach(r => {
+        if(r.questionnaireResponses){
+          Object.keys(r.questionnaireResponses).forEach(qId => allQuestionIds.add(qId));
+        }
+      });
+      
+      // Sort question IDs and add to header
+      const sortedQuestionIds = Array.from(allQuestionIds).sort();
+      header = [...header, ...sortedQuestionIds];
+      
+      const rows = responses.map(r => {
+        let row = [
+          new Date(r.timestamp).toLocaleString('fr-FR'),
+          r.offerId,
+          (r.displayPosition === 1 ? '1ère' : r.displayPosition === 2 ? '2e' : r.displayPosition) || '-',
+          r.mention,
+          r.mentionType || '',
+          r.responseTime || '',
+          r.ip || 'unknown',
+          r.sessionId
+        ];
+        
+        // Add questionnaire answers
+        sortedQuestionIds.forEach(qId => {
+          const answerValue = r.questionnaireResponses && r.questionnaireResponses[qId] ? r.questionnaireResponses[qId] : '';
+          row.push(answerValue);
+        });
+        
+        return row;
+      });
+
+      // Create worksheet
+      const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+      
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Réponses');
+      
+      // Write file
+      XLSX.writeFile(wb, 'reponses_sondage.xlsx');
     }
 
     function downloadFile(content, filename, type){

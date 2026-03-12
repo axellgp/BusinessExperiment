@@ -59,6 +59,14 @@
     .slider-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px;padding:0 4px}
     .slider-value-display{min-width:45px;text-align:center;font-weight:700;font-size:18px;color:var(--accent);background:rgba(255,122,0,0.1);padding:8px 14px;border-radius:10px;border:1.5px solid rgba(255,122,0,0.2)}
     
+    /* Choice/Select */
+    .choice-container{display:flex;flex-direction:column;gap:10px}
+    .choice-option{display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,122,0,0.02);border:1.5px solid rgba(11,43,74,0.12);border-radius:12px;cursor:pointer;transition:all 0.3s}
+    .choice-option:hover{background:rgba(255,122,0,0.08);border-color:var(--accent)}
+    .choice-option input[type="radio"]{width:18px;height:18px;cursor:pointer;accent-color:var(--accent)}
+    .choice-option label{cursor:pointer;flex:1;font-weight:500;margin:0}
+    .choice-option input[type="radio"]:checked + label{color:var(--accent);font-weight:700}
+    
     /* Buttons */
     .button-group{display:flex;gap:12px;margin-top:32px}
     .btn{padding:12px 20px;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;transition:all 0.3s;flex:1}
@@ -206,7 +214,8 @@
         const badgeText = {
           'text': 'Texte',
           'range': 'Nombre',
-          'slider': 'Satisfaction'
+          'slider': 'Satisfaction',
+          'choice': 'Choix'
         }[q.type] || q.type;
         
         html += `<label class="question-label">
@@ -260,6 +269,17 @@
             <span>${q.max}</span>
           </div>`;
         }
+        else if(q.type === 'choice'){
+          html += `<div class="choice-container">`;
+          (q.options || []).forEach((opt, oidx) => {
+            const optId = q.id + '_' + oidx;
+            html += `<label class="choice-option">
+              <input type="radio" name="${q.id}" value="${opt}" id="${optId}" ${q.optional ? '' : 'required'} onchange="updateProgress()">
+              <label for="${optId}">${opt}</label>
+            </label>`;
+          });
+          html += `</div>`;
+        }
         
         html += `</div></div>`;
         return html;
@@ -287,11 +307,27 @@
 
     function updateProgress(){
       const inputs = document.querySelectorAll('input[type="text"], input[type="range"], .slider-input');
+      const radios = document.querySelectorAll('input[type="radio"]');
+      
       let filled = 0;
       inputs.forEach(inp => {
         if(inp.value && inp.value.trim() !== '') filled++;
       });
-      const percent = (filled / inputs.length) * 100;
+      
+      // Check radio buttons (one per group)
+      const radioGroups = {};
+      radios.forEach(r => {
+        radioGroups[r.name] = radioGroups[r.name] || false;
+        if(r.checked) radioGroups[r.name] = true;
+      });
+      filled += Object.values(radioGroups).filter(v => v).length;
+      
+      // Include ranges and sliders
+      const sliders = document.querySelectorAll('.slider-input, input[type="range"]:not(.range-input)');
+      filled += sliders.length;
+      
+      const totalFields = inputs.length + Object.keys(radioGroups).length + sliders.length;
+      const percent = totalFields > 0 ? (filled / totalFields) * 100 : 0;
       document.getElementById('progressFill').style.width = percent + '%';
     }
 
@@ -318,6 +354,11 @@
       // Update progress on input
       document.querySelectorAll('input[type="text"]').forEach(inp => {
         inp.addEventListener('input', updateProgress);
+      });
+      
+      // Update progress on radio change
+      document.querySelectorAll('input[type="radio"]').forEach(inp => {
+        inp.addEventListener('change', updateProgress);
       });
     }
 
