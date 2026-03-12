@@ -48,7 +48,10 @@
     .admin-bar button:hover{background:rgba(11,43,74,0.05);border-color:rgba(11,43,74,0.15)}
     
     /* Content area with offers grid */
-    .content{flex:1;display:flex;align-items:flex-start;justify-content:center;padding-top:8px}
+    .content{flex:1;display:flex;align-items:center;justify-content:center;padding:20px;width:100%;min-height:calc(100vh - 100px)}
+    
+    /* Frame container styling */
+    .frame{display:none;width:100%;min-height:100%;align-items:center;justify-content:center;flex-direction:column;padding:0;box-sizing:border-box}
     
     /* Grid: responsive columns */
     .grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:20px;width:100%;max-width:1100px;margin:0 auto}
@@ -261,7 +264,7 @@
 
       <div class="content">
         <!-- FRAME 1: Welcome -->
-        <div id="frame-1" class="frame" style="display:none">
+        <div id="frame-1" class="frame">
           <div style="width:100%;max-width:600px;margin:0 auto;padding:20px">
             <div style="background:#fff;border-radius:20px;padding:60px 40px;box-shadow:0 12px 40px rgba(11,43,74,0.12);text-align:center">
               <div style="font-size:64px;margin-bottom:20px">👋</div>
@@ -274,7 +277,7 @@
         </div>
 
         <!-- FRAME 2: Choose Preference (Hiver/Été) -->
-        <div id="frame-2" class="frame" style="display:none">
+        <div id="frame-2" class="frame">
           <div style="width:100%;max-width:700px;margin:0 auto;padding:20px">
             <div style="background:#fff;border-radius:20px;padding:40px;box-shadow:0 12px 40px rgba(11,43,74,0.12)">
               <h1 style="text-align:center;font-size:28px;font-weight:800;color:var(--nav);margin:0 0 12px">Préférez vous partir en vacances:</h1>
@@ -289,7 +292,7 @@
         </div>
 
         <!-- FRAME 3: Video Gorille (Attention test) -->
-        <div id="frame-3" class="frame" style="display:none">
+        <div id="frame-3" class="frame">
           <div style="width:100%;max-width:700px;margin:0 auto;padding:20px">
             <div style="background:#fff;border-radius:20px;padding:40px;box-shadow:0 12px 40px rgba(11,43,74,0.12);text-align:center">
               <h1 style="font-size:24px;font-weight:800;color:var(--nav);margin:0 0 12px">📹 Test d'Attention</h1>
@@ -303,7 +306,7 @@
         </div>
 
         <!-- FRAME 4: Challenge - Attention -->
-        <div id="frame-4" class="frame" style="display:none">
+        <div id="frame-4" class="frame">
           <div style="width:100%;max-width:600px;margin:0 auto;padding:20px">
             <div style="background:#fff;border-radius:20px;padding:40px;box-shadow:0 12px 40px rgba(11,43,74,0.12);text-align:center">
               <div style="font-size:48px;margin-bottom:16px">🎯</div>
@@ -318,14 +321,14 @@
         </div>
 
         <!-- FRAME 5: Offer Details -->
-        <div id="frame-5" class="frame" style="display:none">
+        <div id="frame-5" class="frame">
           <div id="offerDetailsContainer" style="width:100%;padding:20px">
             <!-- Offer details will be rendered here -->
           </div>
         </div>
 
         <!-- FRAME 6: Psychometric Questionnaire -->
-        <div id="frame-6" class="frame" style="display:none">
+        <div id="frame-6" class="frame">
           <div style="width:100%;max-width:700px;margin:0 auto;padding:20px">
             <div style="background:#fff;border-radius:20px;padding:40px;box-shadow:0 12px 40px rgba(11,43,74,0.12)">
               <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
@@ -349,7 +352,7 @@
         </div>
 
         <!-- FRAME 7: Mention & Goodbye -->
-        <div id="frame-7" class="frame" style="display:none">
+        <div id="frame-7" class="frame">
           <div style="width:100%;max-width:600px;margin:0 auto;padding:20px">
             <div style="background:#fff;border-radius:20px;padding:60px 40px;box-shadow:0 12px 40px rgba(11,43,74,0.12);text-align:center">
               <div id="mentionDisplayFrame" style="font-size:48px;margin-bottom:20px">🎉</div>
@@ -565,14 +568,6 @@
       // Resolve IP
       await resolveClientIp();
 
-      // Load offers and render
-      let offers = (CONFIG.offers || []).map(o => Object.assign({}, o));
-      if(CONFIG.random_order) offers = shuffle(offers);
-
-      const grid = document.getElementById('grid');
-      grid.innerHTML = '';
-      const mentions = normalizeMentions(CONFIG.mentions);
-
       // Setup admin
       setupAdminUI();
 
@@ -617,7 +612,7 @@
       container.innerHTML = offers.map((offer, idx) => {
         OFFERS_DISPLAY_ORDER[offer.id] = idx + 1; // Track display order
         return `<button class="preference-btn" data-offer="${offer.id}" style="padding:24px;background:#fff;border:2px solid rgba(11,43,74,0.1);border-radius:12px;cursor:pointer;font-size:16px;font-weight:700;transition:all 0.3s;display:flex;align-items:center;justify-content:center;min-height:120px;color:var(--nav)" 
-          onmouseover="this.style.borderColor=var.getComputedStyle(document.documentElement).getPropertyValue('--accent')" 
+          onmouseover="this.style.borderColor='#ff7a00'" 
           onmouseout="this.style.borderColor='rgba(11,43,74,0.1)'"
           onclick="selectPreference('${offer.id}', ${idx + 1})"
         >${offer.season === 'hiver' ? '❄️' : '☀️'} ${offer.title}</button>`;
