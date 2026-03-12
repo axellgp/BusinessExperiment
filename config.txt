@@ -39,6 +39,26 @@
     "subtitle": "Aidez-nous à améliorer l'expérience",
     "emoji": "📋"
   },
+  "questions_before": [
+    {
+      "id": "pre_q1",
+      "type": "text",
+      "question": "Quel est votre nom complet ?",
+      "placeholder": "Entrez votre nom..."
+    },
+    {
+      "id": "pre_q2",
+      "type": "text",
+      "question": "Quel est votre email ?",
+      "placeholder": "votre.email@example.com"
+    }
+  ],
+  "video": {
+    "title": "Présentation de nos offres",
+    "description": "Découvrez nos meilleures destinations en vidéo",
+    "placeholder": "Vidéo à intégrer ici",
+    "url": ""
+  },
   "questions": [
     {
       "id": "q1",

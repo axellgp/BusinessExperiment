@@ -260,36 +260,77 @@
       </div>
 
       <div class="content">
-        <div class="grid" id="grid">
-          <!-- Offers will be rendered here from config.txt -->
+        <!-- FRAME 1: Initial Questions -->
+        <div id="frame-1" class="frame" style="display:none">
+          <div style="width:100%;max-width:600px;margin:0 auto">
+            <div style="background:#fff;border-radius:20px;padding:40px;box-shadow:0 12px 40px rgba(11,43,74,0.12)">
+              <h1 style="text-align:center;font-size:24px;font-weight:800;color:var(--nav);margin:0 0 12px">Avant de commencer</h1>
+              <p style="text-align:center;color:var(--muted);margin:0 0 28px">Dites-nous qui vous êtes</p>
+              <form id="preQuestionsForm">
+                <div id="preQuestionsContainer"></div>
+                <button type="submit" style="width:100%;padding:12px 20px;background:linear-gradient(135deg,var(--accent),#ffb56b);color:#fff;border:none;border-radius:12px;font-weight:700;margin-top:20px;cursor:pointer">Continuer →</button>
+              </form>
+            </div>
+          </div>
         </div>
-        
-        <!-- Questionnaire panel (hidden by default) -->
-        <div id="questionnairePanel" style="display:none;width:100%;max-width:600px;margin:0 auto">
-          <div style="background:#fff;border-radius:20px;padding:40px;box-shadow:0 12px 40px rgba(11,43,74,0.12);border:1px solid rgba(11,43,74,0.04)">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
-              <div id="q-emoji" style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffb56b);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:24px;box-shadow:0 4px 12px rgba(255,122,0,0.25)"></div>
-              <div style="display:flex;flex-direction:column">
-                <h1 class="questionnaire-title" style="margin:0;font-size:20px;font-weight:800;color:var(--nav)">Vos impressions</h1>
-                <p class="questionnaire-subtitle" style="margin:4px 0 0;font-size:13px;color:var(--muted)">Aidez-nous à améliorer l'expérience</p>
+
+        <!-- FRAME 2: Offers -->
+        <div id="frame-2" class="frame" style="display:none">
+          <div class="grid" id="grid">
+            <!-- Offers will be rendered here -->
+          </div>
+        </div>
+
+        <!-- FRAME 3: Video -->
+        <div id="frame-3" class="frame" style="display:none">
+          <div style="width:100%;max-width:700px;margin:0 auto">
+            <div style="background:#fff;border-radius:20px;padding:40px;box-shadow:0 12px 40px rgba(11,43,74,0.12);text-align:center">
+              <h1 style="font-size:24px;font-weight:800;color:var(--nav);margin:0 0 12px">📹 Présentation vidéo</h1>
+              <p style="color:var(--muted);margin:0 0 28px">Découvrez nos meilleures destinations en vidéo</p>
+              <div style="background:rgba(11,43,74,0.05);border-radius:16px;padding:60px 20px;margin-bottom:28px;border:2px dashed rgba(11,43,74,0.1)">
+                <div style="font-size:48px;margin-bottom:12px">🎥</div>
+                <p style="color:var(--muted)">Vidéo à intégrer ici</p>
               </div>
+              <button id="skipVideoBtn" style="padding:12px 20px;background:linear-gradient(135deg,var(--accent),#ffb56b);color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer">Continuer →</button>
             </div>
-            
-            <div style="width:100%;height:6px;background:#e8e8e8;border-radius:10px;margin-bottom:24px;overflow:hidden">
-              <div id="questionnaireProgress" style="height:100%;background:linear-gradient(90deg, var(--accent), #ffb56b);width:0%;transition:width 0.4s ease;"></div>
-            </div>
-            
-            <form id="questionnaireForm">
-              <div id="questionsContainer"></div>
+          </div>
+        </div>
+
+        <!-- FRAME 4: Final Questions -->
+        <div id="frame-4" class="frame" style="display:none">
+          <div style="width:100%;max-width:600px;margin:0 auto">
+            <div style="background:#fff;border-radius:20px;padding:40px;box-shadow:0 12px 40px rgba(11,43,74,0.12)">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+                <div id="q-emoji" style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffb56b);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:24px;box-shadow:0 4px 12px rgba(255,122,0,0.25)">📋</div>
+                <div>
+                  <h1 class="questionnaire-title" style="margin:0;font-size:20px;font-weight:800;color:var(--nav)">Vos impressions</h1>
+                  <p class="questionnaire-subtitle" style="margin:4px 0 0;font-size:13px;color:var(--muted)">Aidez-nous à améliorer l'expérience</p>
+                </div>
+              </div>
               
-              <div style="display:flex;gap:12px;margin-top:32px">
-                <button type="button" id="questionnaireBackBtn" style="flex:1;padding:12px 20px;border:1.5px solid rgba(11,43,74,0.15);border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;background:#fff;color:var(--nav);transition:all 0.3s">Retour</button>
-                <button type="submit" id="questionnaireSubmitBtn" style="flex:1;padding:12px 20px;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;background:linear-gradient(135deg,var(--accent),#ffb56b);color:#fff;box-shadow:0 4px 12px rgba(255,122,0,0.25);transition:all 0.3s">Soumettre</button>
+              <div style="width:100%;height:6px;background:#e8e8e8;border-radius:10px;margin-bottom:24px;overflow:hidden">
+                <div id="questionnaireProgress" style="height:100%;background:linear-gradient(90deg, var(--accent), #ffb56b);width:0%;transition:width 0.4s ease;"></div>
               </div>
-            </form>
-            
-            <div id="questionnaireSuccess" style="display:none;text-align:center;padding:20px;background:rgba(34,197,94,0.1);border:1.5px solid rgba(34,197,94,0.3);border-radius:12px;margin-top:16px;color:#166534;font-weight:600;animation:slideUp 0.4s ease">
-              ✓ Merci pour vos réponses ! Elles nous aident beaucoup.
+              
+              <form id="questionnaireForm">
+                <div id="questionsContainer"></div>
+                <button type="submit" style="width:100%;padding:12px 20px;background:linear-gradient(135deg,var(--accent),#ffb56b);color:#fff;border:none;border-radius:12px;font-weight:700;margin-top:20px;cursor:pointer">Soumettre →</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- FRAME 5: Thank You -->
+        <div id="frame-5" class="frame" style="display:none">
+          <div style="width:100%;max-width:600px;margin:0 auto">
+            <div style="background:#fff;border-radius:20px;padding:60px 40px;box-shadow:0 12px 40px rgba(11,43,74,0.12);text-align:center">
+              <div style="font-size:64px;margin-bottom:20px">✨</div>
+              <h1 style="font-size:28px;font-weight:800;color:var(--nav);margin:0 0 12px">Merci !</h1>
+              <p style="color:var(--muted);margin:0 0 28px;font-size:16px">Vos réponses nous sont très précieuses et nous aident à améliorer nos services.</p>
+              <div style="background:rgba(34,197,94,0.1);border:1.5px solid rgba(34,197,94,0.3);border-radius:12px;padding:16px;margin-bottom:28px;color:#166534;font-weight:600">
+                ✓ Toutes vos données ont été enregistrées avec succès
+              </div>
+              <button onclick="location.reload()" style="padding:12px 20px;background:linear-gradient(135deg,var(--accent),#ffb56b);color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer">Recommencer</button>
             </div>
           </div>
         </div>
@@ -406,6 +447,8 @@
     let PAGE_LOAD_TIME = Date.now();
     let ADMIN_AUTHED = false;
     let OFFERS_DISPLAY_ORDER = {}; // Track which offer displayed first/second
+    let CURRENT_FRAME = 1; // Track current frame (1-5)
+    let COLLECTED_RESPONSES = {}; // Collect all responses through journey
 
     // Generate unique session ID
     const generateSessionId = () => '_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
@@ -505,9 +548,75 @@
       // Setup admin
       setupAdminUI();
 
-      // Render offers and track display order
+      // Show frame 1 (initial questions)
+      showFrame(1);
+    }
+
+    function showFrame(frameNum){
+      CURRENT_FRAME = frameNum;
+      
+      // Hide all frames
+      document.querySelectorAll('.frame').forEach(f => f.style.display = 'none');
+      
+      // Show requested frame
+      const frame = document.getElementById('frame-' + frameNum);
+      if(frame) frame.style.display = 'flex';
+      
+      console.log('📍 Affichage frame:', frameNum);
+      
+      // Initialize frame content
+      if(frameNum === 1){
+        renderPreQuestions();
+      } else if(frameNum === 2){
+        renderOffers();
+      } else if(frameNum === 3){
+        // Video frame - just show it
+      } else if(frameNum === 4){
+        renderFinalQuestions();
+      } else if(frameNum === 5){
+        // Thank you - just show it
+      }
+    }
+
+    function renderPreQuestions(){
+      const container = document.getElementById('preQuestionsContainer');
+      const questions = (CONFIG && CONFIG.questions_before) || [];
+
+      container.innerHTML = questions.map(q => {
+        if(q.type === 'text'){
+          return `<div style="margin-bottom:20px">
+            <label style="font-weight:700;color:var(--nav);display:block;margin-bottom:8px">${q.question}</label>
+            <input type="text" name="${q.id}" placeholder="${q.placeholder}" class="text-input" required>
+          </div>`;
+        }
+        return '';
+      }).join('');
+      
+      const form = document.getElementById('preQuestionsForm');
+      if(form){
+        form.onsubmit = async (e) => {
+          e.preventDefault();
+          const formData = new FormData(form);
+          questions.forEach(q => {
+            COLLECTED_RESPONSES[q.id] = formData.get(q.id) || null;
+          });
+          console.log('✅ Frame 1 - Réponses pré-questionnaire:', COLLECTED_RESPONSES);
+          showFrame(2);
+        };
+      }
+    }
+
+    function renderOffers(){
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      
+      let offers = (CONFIG.offers || []).map(o => Object.assign({}, o));
+      if(CONFIG.random_order) offers = shuffle(offers);
+
+      const mentions = normalizeMentions(CONFIG.mentions);
+
       offers.forEach((o, idx) => {
-        OFFERS_DISPLAY_ORDER[o.id] = idx + 1; // Position 1, 2, etc
+        OFFERS_DISPLAY_ORDER[o.id] = idx + 1;
         let mentionObj = null;
         if(o.season === CONFIG.mention_allowed_on && mentions.length){
           const prob = (typeof CONFIG.mention_probability === 'number') ? CONFIG.mention_probability : 0;
@@ -518,8 +627,82 @@
         const card = createCard(o, mentionObj);
         grid.appendChild(card);
       });
-      
-      console.log('📍 Ordre d\'affichage des offres:', OFFERS_DISPLAY_ORDER);
+    }
+
+    function createCardForFrame(offer, mention){
+      const a = document.createElement('article');
+      a.className = 'card';
+      a.dataset.offer = offer.id;
+
+      if(mention){
+        const m = document.createElement('div');
+        m.className = 'mention';
+        m.textContent = (mention.emoji ? mention.emoji + ' ' : ' ') + mention.text;
+        if(mention.color) m.style.background = mention.color;
+        a.appendChild(m);
+      }
+
+      const thumb = document.createElement('div');
+      thumb.className = 'thumb';
+      if(offer.image) thumb.style.backgroundImage = `url('${offer.image}')`;
+      else thumb.textContent = '🖼️';
+      a.appendChild(thumb);
+
+      const h = document.createElement('h3');
+      h.className = 'title';
+      h.textContent = offer.title;
+      a.appendChild(h);
+
+      const p = document.createElement('p');
+      p.className = 'desc';
+      p.textContent = offer.desc;
+      a.appendChild(p);
+
+      const btn = document.createElement('button');
+      btn.className = 'choose';
+      btn.dataset.offer = offer.id;
+      btn.textContent = 'Choisir cette offre';
+
+      btn.addEventListener('click', async () => {
+        const responseTime = (Date.now() - PAGE_LOAD_TIME) / 1000;
+
+        const allBtns = document.querySelectorAll('.choose');
+        allBtns.forEach(b => { b.disabled = true; });
+
+        const payload = {
+          timestamp: new Date().toISOString(),
+          offerId: offer.id,
+          period: offer.season || '',
+          mention: mention ? 'oui' : 'non',
+          mentionType: mention ? (mention.text || '') : '',
+          responseTime: Math.round(responseTime * 100) / 100,
+          displayPosition: OFFERS_DISPLAY_ORDER[offer.id] || '?',
+          ip: CLIENT_IP || 'unknown',
+          sessionId: SESSION_ID
+        };
+
+        if(!FIREBASE_ENABLED){
+          alert('❌ Erreur: Firebase non disponible.');
+          btn.textContent = 'Erreur ❌';
+          return;
+        }
+
+        console.log('📤 Envoi offre à Firebase:', payload);
+        await submitToFirebase(payload);
+
+        COLLECTED_RESPONSES['offerId'] = offer.id;
+        COLLECTED_RESPONSES['mention'] = mention ? 'oui' : 'non';
+        COLLECTED_RESPONSES['mentionType'] = mention ? (mention.text || '') : '';
+
+        btn.textContent = 'Merci 😊';
+        
+        setTimeout(() => {
+          showFrame(3);
+        }, 1500);
+      });
+
+      a.appendChild(btn);
+      return a;
     }
 
     // Shuffle array
@@ -547,7 +730,6 @@
       return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    // Create offer card
     function createCard(offer, mention){
       const a = document.createElement('article');
       a.className = 'card';
@@ -583,15 +765,11 @@
       btn.textContent = 'Choisir cette offre';
 
       btn.addEventListener('click', async () => {
-        const responseTime = (Date.now() - PAGE_LOAD_TIME) / 1000; // In seconds
+        const responseTime = (Date.now() - PAGE_LOAD_TIME) / 1000;
 
-        // Disable buttons and fade other cards
         const allBtns = document.querySelectorAll('.choose');
-        const allCards = document.querySelectorAll('.card');
         allBtns.forEach(b => { b.disabled = true; });
-        allCards.forEach(c => { if(c !== a) c.style.opacity = '0.35'; else c.style.opacity = '1'; });
 
-        // Prepare payload
         const payload = {
           timestamp: new Date().toISOString(),
           offerId: offer.id,
@@ -604,31 +782,25 @@
           sessionId: SESSION_ID
         };
 
-        // Submit ONLY to Firebase (no local storage)
         if(!FIREBASE_ENABLED){
-          alert('❌ Erreur: Firebase non disponible. Les réponses ne peuvent pas être enregistrées.');
+          alert('❌ Erreur: Firebase non disponible.');
           btn.textContent = 'Erreur ❌';
           return;
         }
 
-        console.log('📤 Envoi de la réponse à Firebase:', payload);
+        console.log('📤 Envoi offre à Firebase:', payload);
         await submitToFirebase(payload);
 
-        // Save offer ID and timestamp to session for questionnaire
-        sessionStorage.setItem('last_offer_id', offer.id);
-        sessionStorage.setItem('collection_timestamp', payload.timestamp);
+        COLLECTED_RESPONSES['offerId'] = offer.id;
+        COLLECTED_RESPONSES['mention'] = mention ? 'oui' : 'non';
+        COLLECTED_RESPONSES['mentionType'] = mention ? (mention.text || '') : '';
+        COLLECTED_RESPONSES['responseTime'] = payload.responseTime;
 
-        // Visual feedback
         btn.textContent = 'Merci 😊';
         
-        // Save offer ID and timestamp to session for questionnaire
-        sessionStorage.setItem('last_offer_id', offer.id);
-        sessionStorage.setItem('collection_timestamp', payload.timestamp);
-
-        // Show questionnaire after 3 seconds
         setTimeout(() => {
-          showQuestionnaire();
-        }, 3000);
+          showFrame(3);
+        }, 1500);
       });
 
       a.appendChild(btn);
@@ -636,22 +808,7 @@
     }
 
     // ===== QUESTIONNAIRE FUNCTIONS =====
-    function showQuestionnaire(){
-      const grid = document.getElementById('grid');
-      const panel = document.getElementById('questionnairePanel');
-      
-      // Hide offers
-      grid.style.display = 'none';
-      panel.style.display = 'block';
-      
-      // Render questions
-      renderQuestionnaire();
-      
-      // Scroll to top
-      document.querySelector('.main').scrollTop = 0;
-    }
-
-    function renderQuestionnaire(){
+    function renderFinalQuestions(){
       const container = document.getElementById('questionsContainer');
       const questions = (CONFIG && CONFIG.questions) || [];
       const qConfig = (CONFIG && CONFIG.questionnaire) || {title: 'Vos impressions', subtitle: 'Aidez-nous à améliorer', emoji: '📋'};
@@ -848,14 +1005,24 @@
       submitBtn.textContent = '✓ Envoyé';
       
       document.getElementById('questionnaireForm').style.display = 'none';
-      document.getElementById('questionnaireSuccess').style.display = 'block';
+      
+      // Save questions to COLLECTED_RESPONSES
+      questions.forEach(q => {
+        COLLECTED_RESPONSES[q.id] = responses[q.id];
+      });
 
       setTimeout(() => {
-        location.reload();
-      }, 2000);
+        showFrame(5);
+      }, 1500);
     }
 
-    // ===== ADMIN DASHBOARD =====
+    // Skip video button
+    document.addEventListener('DOMContentLoaded', () => {
+      const skipVideoBtn = document.getElementById('skipVideoBtn');
+      if(skipVideoBtn){
+        skipVideoBtn.onclick = () => showFrame(4);
+      }
+    });
     function setupAdminUI(){
       const adminToggleBtn = document.getElementById('adminToggleBtn');
       const adminModal = document.getElementById('adminModal');
