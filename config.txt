@@ -42,22 +42,26 @@
   "questions_before": [
     {
       "id": "pre_q1",
-      "type": "text",
-      "question": "Quel est votre nom complet ?",
-      "placeholder": "Entrez votre nom..."
+      "type": "choice",
+      "optional": true,
+      "question": "Comment avez-vous entendu parler de cette offre ?",
+      "options": [
+        ""
+        ]
     },
     {
       "id": "pre_q2",
       "type": "text",
-      "question": "Quel est votre email ?",
-      "placeholder": "votre.email@example.com"
+      "optional": true,
+      "question": "Quel est votre poste ?",
+      "placeholder": "Etudiant/Salarié/Autre"
     }
   ],
   "video": {
     "title": "Présentation de nos offres",
     "description": "Découvrez nos meilleures destinations en vidéo",
     "placeholder": "Vidéo à intégrer ici",
-    "url": ""
+    "url": "https://www.youtube.com/watch?v=vJG698U2Mvo"
   },
   "questions": [
     {
