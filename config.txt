@@ -1,7 +1,7 @@
 {
   "random_order": true,
   "mention_allowed_on": "hiver",
-  "mention_probability": 0.6666667,
+  "mention_probability": 0.8,
   "admin_password": "aqsl",
   "collector_endpoint": "firebase",
   "firebase_config": {
@@ -68,7 +68,7 @@
       "category": "Affection",
       "question": "Cette offre de vacances me donne-t-elle envie de partir en vacances ?",
       "min": 0,
-      "max": 10
+      "max": 7
     },
     {
       "id": "antic_q1",
@@ -76,7 +76,7 @@
       "category": "Anticipation",
       "question": "Cette offre me donne envie d'organiser mes vacances avec mon CE",
       "min": 0,
-      "max": 10
+      "max": 7
     },
     {
       "id": "att_q1",
@@ -84,7 +84,7 @@
       "category": "Attention",
       "question": "J'ai pris conscience de la différence entre les offres",
       "min": 0,
-      "max": 10
+      "max": 7
     },
     {
       "id": "att_q2",
@@ -92,7 +92,7 @@
       "category": "Attention",
       "question": "Une offre me semblait bien plus intéressante que l'autre",
       "min": 0,
-      "max": 10
+      "max": 7
     },
     {
       "id": "comp_q1",
@@ -100,7 +100,7 @@
       "category": "Comportement",
       "question": "Cette proposition d'offres est réaliste",
       "min": 0,
-      "max": 10
+      "max": 7
     },
     {
       "id": "intent_q1",
@@ -108,7 +108,7 @@
       "category": "Intention",
       "question": "Cette offre me donne envie de partir en vacances pendant une période particulière",
       "min": 0,
-      "max": 10
+      "max": 7
     }
   ]
 }
