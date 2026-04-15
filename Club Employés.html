@@ -615,7 +615,7 @@
           onmouseover="this.style.borderColor='#ff7a00'" 
           onmouseout="this.style.borderColor='rgba(11,43,74,0.1)'"
           onclick="selectPreference('${offer.id}', ${idx + 1})"
-        >${offer.season === 'hiver' ? '❄️' : '☀️'} ${offer.title}</button>`;
+        >${offer.season === 'hiver' ? '' : ''} ${offer.title}</button>`;
       }).join('');
     }
 
