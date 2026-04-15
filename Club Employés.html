@@ -681,12 +681,14 @@
       const selectedOffer = offers.find(o => o.id === offerId);
       const mentionObj = mention || {};
 
+      const hasMention = mentionObj && mentionObj.text ? true : false;
       const payload = {
         timestamp: new Date().toISOString(),
         offerId: offerId,
         period: selectedOffer ? selectedOffer.season : '',
-        mention: mentionObj && mentionObj.text ? 'oui' : 'non',
-        mentionType: mentionObj && mentionObj.text ? mentionObj.text : '',
+        offer_has_mention: hasMention,
+        mention: hasMention ? 'oui' : 'non',
+        mentionType: hasMention ? mentionObj.text : '',
         responseTime: Math.round(responseTime * 100) / 100,
         displayPosition: OFFERS_DISPLAY_ORDER[offerId] || '?',
         ip: CLIENT_IP || 'unknown',
@@ -706,8 +708,9 @@
       sessionStorage.setItem('collection_timestamp', payload.timestamp);
 
       COLLECTED_RESPONSES['offerId'] = offerId;
-      COLLECTED_RESPONSES['mention'] = mentionObj && mentionObj.text ? 'oui' : 'non';
-      COLLECTED_RESPONSES['mentionType'] = mentionObj && mentionObj.text ? mentionObj.text : '';
+      COLLECTED_RESPONSES['offer_has_mention'] = hasMention;
+      COLLECTED_RESPONSES['mention'] = hasMention ? 'oui' : 'non';
+      COLLECTED_RESPONSES['mentionType'] = hasMention ? mentionObj.text : '';
 
       setTimeout(() => {
         showFrame(6); // Go to questionnaire (Frame 6)
@@ -754,12 +757,14 @@
         const allBtns = document.querySelectorAll('.choose');
         allBtns.forEach(b => { b.disabled = true; });
 
+        const hasMention = mention ? true : false;
         const payload = {
           timestamp: new Date().toISOString(),
           offerId: offer.id,
           period: offer.season || '',
-          mention: mention ? 'oui' : 'non',
-          mentionType: mention ? (mention.text || '') : '',
+          offer_has_mention: hasMention,
+          mention: hasMention ? 'oui' : 'non',
+          mentionType: hasMention ? (mention.text || '') : '',
           responseTime: Math.round(responseTime * 100) / 100,
           displayPosition: OFFERS_DISPLAY_ORDER[offer.id] || '?',
           ip: CLIENT_IP || 'unknown',
@@ -776,8 +781,9 @@
         await submitToFirebase(payload);
 
         COLLECTED_RESPONSES['offerId'] = offer.id;
-        COLLECTED_RESPONSES['mention'] = mention ? 'oui' : 'non';
-        COLLECTED_RESPONSES['mentionType'] = mention ? (mention.text || '') : '';
+        COLLECTED_RESPONSES['offer_has_mention'] = hasMention;
+        COLLECTED_RESPONSES['mention'] = hasMention ? 'oui' : 'non';
+        COLLECTED_RESPONSES['mentionType'] = hasMention ? (mention.text || '') : '';
 
         btn.textContent = 'Merci 😊';
         
@@ -852,14 +858,14 @@
               <input type="range" 
                 name="${q.id}" 
                 min="${q.min || 0}" 
-                max="${q.max || 10}" 
-                value="5"
+                max="${q.max || 7}" 
+                value="3"
                 class="slider-input"
                 data-type="slider"
                 onchange="updateSliderDisplay(this)"
                 style="flex:1;height:6px;border-radius:3px;background:linear-gradient(to right,#ff6b6b,#ff7a00,#06b6d4);cursor:pointer;-webkit-appearance:none;appearance:none"
               />
-              <span style="font-size:11px;color:var(--muted);min-width:24px">10</span>
+              <span style="font-size:11px;color:var(--muted);min-width:24px">7</span>
               <span class="slider-value" id="slider-val-${q.id}" style="font-weight:800;color:var(--accent);min-width:28px;text-align:right;font-size:14px">5</span>
             </div>
           </div>`;
