@@ -629,8 +629,9 @@
         if(q.type === 'choice' && q.options){
           // Find which option corresponds to the selected offer season
           const matchingOption = q.options.find(opt => {
-            // Match "Hiver" to season "hiver", "Été" to season "ete"
-            return opt.toLowerCase() === selectedOffer.season;
+            // Normalize both strings (remove accents and convert to lowercase)
+            const normalizeStr = (str) => str.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            return normalizeStr(opt) === normalizeStr(selectedOffer.season);
           });
           if(matchingOption){
             COLLECTED_RESPONSES[q.id] = matchingOption;
