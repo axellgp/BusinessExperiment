@@ -719,6 +719,14 @@
         ip: CLIENT_IP || 'unknown',
         sessionId: SESSION_ID
       };
+      
+      // Add questions_before responses if they were collected
+      const questionsBefore = (CONFIG && CONFIG.questions_before) || [];
+      questionsBefore.forEach(q => {
+        if(COLLECTED_RESPONSES[q.id]){
+          payload[q.id] = COLLECTED_RESPONSES[q.id];
+        }
+      });
 
       // Store for questionnaire immediately
       sessionStorage.setItem('last_offer_id', offerId);
@@ -1385,7 +1393,7 @@
 
     function convertToXlsx(responses){
       // Build headers
-      let header = ['Date/Heure', 'Offre', 'Position Affichage', 'Mention', 'Temps Réponse (s)', 'IP', 'Session ID'];
+      let header = ['Date/Heure', 'Offre', 'Position Affichage', 'Mention', 'Type de mention', 'Temps Réponse (s)', 'IP', 'Session ID'];
       
       // Add questions_before headers if any
       const questionsBefore = (CONFIG && CONFIG.questions_before) || [];
@@ -1410,6 +1418,7 @@
           r.offerId,
           (r.displayPosition === 1 ? '1ère' : r.displayPosition === 2 ? '2e' : r.displayPosition) || '-',
           r.mention,
+          r.availableMentionType || 'Aucune Mention',
           r.responseTime || '',
           r.ip || 'unknown',
           r.sessionId
