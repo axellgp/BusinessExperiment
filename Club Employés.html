@@ -689,6 +689,7 @@
         offer_has_mention: hasMention,
         mention: hasMention ? 'oui' : 'non',
         mentionType: hasMention ? mentionObj.text : '',
+        availableMentionType: hasMention ? mentionObj.text : 'Aucune Mention',
         responseTime: Math.round(responseTime * 100) / 100,
         displayPosition: OFFERS_DISPLAY_ORDER[offerId] || '?',
         ip: CLIENT_IP || 'unknown',
@@ -711,6 +712,7 @@
       COLLECTED_RESPONSES['offer_has_mention'] = hasMention;
       COLLECTED_RESPONSES['mention'] = hasMention ? 'oui' : 'non';
       COLLECTED_RESPONSES['mentionType'] = hasMention ? mentionObj.text : '';
+      COLLECTED_RESPONSES['availableMentionType'] = hasMention ? mentionObj.text : 'Aucune Mention';
 
       setTimeout(() => {
         showFrame(6); // Go to questionnaire (Frame 6)
@@ -765,6 +767,7 @@
           offer_has_mention: hasMention,
           mention: hasMention ? 'oui' : 'non',
           mentionType: hasMention ? (mention.text || '') : '',
+          availableMentionType: hasMention ? (mention.text || '') : 'Aucune Mention',
           responseTime: Math.round(responseTime * 100) / 100,
           displayPosition: OFFERS_DISPLAY_ORDER[offer.id] || '?',
           ip: CLIENT_IP || 'unknown',
@@ -784,6 +787,7 @@
         COLLECTED_RESPONSES['offer_has_mention'] = hasMention;
         COLLECTED_RESPONSES['mention'] = hasMention ? 'oui' : 'non';
         COLLECTED_RESPONSES['mentionType'] = hasMention ? (mention.text || '') : '';
+        COLLECTED_RESPONSES['availableMentionType'] = hasMention ? (mention.text || '') : 'Aucune Mention';
 
         btn.textContent = 'Merci 😊';
         
@@ -1398,7 +1402,7 @@
           r.offerId,
           (r.displayPosition === 1 ? '1ère' : r.displayPosition === 2 ? '2e' : r.displayPosition) || '-',
           r.mention,
-          r.mentionType || '',
+          r.availableMentionType || 'Aucune Mention',
           r.responseTime || '',
           r.ip || 'unknown',
           r.sessionId
@@ -1442,7 +1446,7 @@
           r.offerId,
           (r.displayPosition === 1 ? '1ère' : r.displayPosition === 2 ? '2e' : r.displayPosition) || '-',
           r.mention,
-          r.mentionType || '',
+          r.availableMentionType || 'Aucune Mention',
           r.responseTime || '',
           r.ip || 'unknown',
           r.sessionId
