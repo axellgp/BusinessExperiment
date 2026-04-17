@@ -96,33 +96,101 @@
     
     @media (max-width:768px){
       .app{flex-direction:column-reverse}
-      .sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid rgba(11,43,74,0.08);padding:16px;display:none;position:fixed;left:0;top:0;z-index:85;max-height:70vh;overflow-y:auto}
+      .sidebar{width:100%;height:auto;border-right:none;border-bottom:1px solid rgba(11,43,74,0.08);padding:12px;display:none;position:fixed;left:0;top:0;z-index:85;max-height:70vh;overflow-y:auto}
       .sidebar.mobile-open{display:flex;flex-direction:column}
       .sidebar-close{display:flex}
-      .main{padding:16px;padding-top:16px;min-height:auto}
-      .header{flex-direction:column;align-items:stretch;margin-bottom:16px}
-      .header > div:first-child{flex-direction:column}
-      .search{max-width:none}
+      .main{padding:12px;padding-top:16px;min-height:auto}
+      .header{flex-direction:column;align-items:stretch;margin-bottom:16px;gap:12px}
+      .header > div:first-child{flex-direction:column;gap:8px}
+      .header > div:first-child > div:first-child > div:first-child{font-size:20px}
+      .header > div:first-child > div:first-child > div:last-child{font-size:12px}
+      .search{max-width:none;padding:12px 14px;font-size:14px}
+      .search input{font-size:16px}
+      .admin-bar{flex-wrap:wrap;gap:6px}
+      .admin-bar button{padding:10px 14px;font-size:12px;flex:1;min-width:100px}
       .grid{grid-template-columns:1fr;gap:14px}
-      .card{min-height:300px}
-      .thumb{height:160px}
-      .title{font-size:16px}
+      .card{min-height:auto;padding:12px}
+      .thumb{height:180px}
+      .title{font-size:16px;margin-bottom:8px}
+      .desc{font-size:13px;line-height:1.4}
+      .choose{padding:12px 14px;font-size:14px;font-weight:700;width:100%;min-height:44px;display:flex;align-items:center;justify-content:center}
+      .mention{top:8px;left:8px;font-size:16px;padding:6px 8px}
+      
+      /* Preference buttons mobile */
+      .preference-btn{padding:16px 12px !important;font-size:15px !important;min-height:100px !important}
+      
+      /* Questionnaire mobile */
+      .question-item{margin-bottom:16px}
+      .question-label{font-size:14px;margin-bottom:10px}
+      .text-input{padding:14px;font-size:16px}
+      .slider-input{height:8px}
+      .slider-input::-webkit-slider-thumb{width:32px;height:32px}
+      .slider-input::-moz-range-thumb{width:32px;height:32px}
+      .slider-value-display{font-size:18px;padding:10px 14px}
+      .choice-option{padding:12px;font-size:14px}
+      .choice-option input[type="radio"]{width:20px;height:20px}
+      .btn{padding:14px 16px;font-size:14px;min-height:44px}
+      
+      /* Modal mobile */
+      .modal .box{padding:20px;min-width:280px;width:90vw}
+      .modal input{padding:12px;font-size:16px}
       
       .mobile-tab{display:flex;position:fixed;left:12px;top:12px;background:#fff;padding:8px 12px;border-radius:20px;box-shadow:0 4px 12px rgba(11,43,74,0.15);align-items:center;gap:8px;z-index:80;cursor:pointer;font-weight:700;font-size:13px}
       .mobile-tab.pulse{animation:mobilePulse 1.6s ease-in-out infinite}
       .mobile-tab .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block}
-      
-      .choose{padding:10px 14px;font-size:13px}
     }
     
     @media (max-width:480px){
-      .main{padding:12px}
-      .header > div:first-child > div:first-child > div:first-child{font-size:20px}
-      .search{padding:8px 10px;font-size:13px}
-      .grid{gap:12px}
-      .card{padding:10px;min-height:280px}
-      .thumb{height:140px}
-      .title{font-size:15px}
+      .main{padding:10px;min-height:100vh}
+      .header{margin-bottom:12px}
+      .header > div:first-child > div:first-child > div:first-child{font-size:18px}
+      .header > div:first-child > div:first-child > div:last-child{font-size:11px}
+      .search{padding:10px 12px;font-size:13px;margin-bottom:8px}
+      .search input{font-size:16px;padding:10px}
+      .admin-bar{gap:4px}
+      .admin-bar button{padding:8px 10px;font-size:11px;flex:1}
+      .grid{gap:10px}
+      .card{min-height:auto;padding:10px;border-radius:12px}
+      .thumb{height:160px;margin-bottom:10px}
+      .title{font-size:15px;margin-bottom:6px}
+      .desc{font-size:12px;margin-bottom:10px}
+      .choose{padding:12px 10px;font-size:13px;min-height:44px}
+      .mention{top:6px;left:6px;font-size:14px;padding:4px 6px;border-radius:6px}
+      
+      /* Preference buttons small mobile */
+      .preference-btn{padding:14px 10px !important;font-size:14px !important;min-height:90px !important;border-radius:10px !important}
+      
+      /* Questionnaire very small screens */
+      .question-item{margin-bottom:14px}
+      .question-label{font-size:13px;margin-bottom:8px}
+      .text-input{padding:12px;font-size:16px;border-radius:8px}
+      .slider-container{gap:8px}
+      .slider-input{height:6px}
+      .slider-input::-webkit-slider-thumb{width:28px;height:28px}
+      .slider-input::-moz-range-thumb{width:28px;height:28px}
+      .slider-value-display{font-size:16px;padding:8px 10px;min-width:40px}
+      .slider-labels{font-size:11px;padding:0;gap:4px}
+      .choice-option{padding:10px;font-size:13px;border-radius:10px;gap:8px}
+      .choice-option input[type="radio"]{width:18px;height:18px;min-width:18px}
+      .choice-option label{font-size:13px}
+      .btn{padding:12px 14px;font-size:13px;min-height:44px;border-radius:10px}
+      .btn-primary{font-size:13px}
+      
+      /* Modal very small */
+      .modal .box{padding:16px;min-width:90vw;border-radius:12px}
+      .modal input{padding:10px;font-size:16px;border-radius:8px;margin-top:8px}
+      
+      /* Fix touch targets minimum 44x44px */
+      button, input[type="button"], input[type="radio"], input[type="checkbox"]{min-height:44px}
+      
+      /* Better spacing for forms */
+      .question-block{margin-bottom:16px}
+      .button-group{gap:8px;margin-top:20px;flex-direction:column}
+      
+      /* Offering cards mobile */
+      .offering-card{padding:14px !important;border-radius:12px !important}
+      .offering-card h3{font-size:16px;margin-bottom:8px}
+      .offering-card p{font-size:12px;line-height:1.4;margin-bottom:12px}
     }
     
     @keyframes mobilePulse{0%{transform:translateY(0)}50%{transform:translateY(-4px)}100%{transform:translateY(0)}}
