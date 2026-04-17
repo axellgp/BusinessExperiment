@@ -686,16 +686,17 @@
       const offers = CONFIG.offers || [];
       const selectedOffer = offers.find(o => o.id === offerId);
 
-      // Use the mention that was displayed in this frame, not the one from the clicked offer
-      const frameHasMention = CURRENT_FRAME_MENTION ? true : false;
+      // Check if the clicked offer had a mention
+      const offeredHasMention = mention && mention.text ? true : false;
+      
       const payload = {
         timestamp: new Date().toISOString(),
         offerId: offerId,
         period: selectedOffer ? selectedOffer.season : '',
-        offer_has_mention: frameHasMention,
-        mention: frameHasMention ? 'oui' : 'non',
-        mentionType: frameHasMention ? CURRENT_FRAME_MENTION.text : '',
-        availableMentionType: frameHasMention ? CURRENT_FRAME_MENTION.text : 'Aucune Mention',
+        offer_has_mention: offeredHasMention,
+        mention: offeredHasMention ? 'oui' : 'non',
+        mentionType: offeredHasMention ? mention.text : '',
+        availableMentionType: CURRENT_FRAME_MENTION ? CURRENT_FRAME_MENTION.text : 'Aucune Mention',
         responseTime: Math.round(responseTime * 100) / 100,
         displayPosition: OFFERS_DISPLAY_ORDER[offerId] || '?',
         ip: CLIENT_IP || 'unknown',
@@ -707,10 +708,10 @@
       sessionStorage.setItem('collection_timestamp', payload.timestamp);
 
       COLLECTED_RESPONSES['offerId'] = offerId;
-      COLLECTED_RESPONSES['offer_has_mention'] = frameHasMention;
-      COLLECTED_RESPONSES['mention'] = frameHasMention ? 'oui' : 'non';
-      COLLECTED_RESPONSES['mentionType'] = frameHasMention ? CURRENT_FRAME_MENTION.text : '';
-      COLLECTED_RESPONSES['availableMentionType'] = frameHasMention ? CURRENT_FRAME_MENTION.text : 'Aucune Mention';
+      COLLECTED_RESPONSES['offer_has_mention'] = offeredHasMention;
+      COLLECTED_RESPONSES['mention'] = offeredHasMention ? 'oui' : 'non';
+      COLLECTED_RESPONSES['mentionType'] = offeredHasMention ? mention.text : '';
+      COLLECTED_RESPONSES['availableMentionType'] = CURRENT_FRAME_MENTION ? CURRENT_FRAME_MENTION.text : 'Aucune Mention';
 
       // Go to questionnaire immediately for better UX
       showFrame(6);
