@@ -479,6 +479,7 @@
     let ADMIN_AUTHED = false;
     let OFFERS_DISPLAY_ORDER = {}; // Track which offer displayed first/second
     let CURRENT_FRAME = 1; // Track current frame (1-5)
+    let CURRENT_FRAME_MENTION = null; // Track mention displayed in current frame
     let COLLECTED_RESPONSES = {}; // Collect all responses through journey
 
     // Generate unique session ID
@@ -632,6 +633,7 @@
       if(CONFIG.random_order) offers = shuffle(offers);
 
       const mentions = normalizeMentions(CONFIG.mentions);
+      CURRENT_FRAME_MENTION = null; // Reset frame mention
 
       let html = `<div style="width:100%;max-width:900px;margin:0 auto">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:20px">`;
@@ -643,6 +645,10 @@
           const prob = (typeof CONFIG.mention_probability === 'number') ? CONFIG.mention_probability : 0;
           if(Math.random() < prob){
             mentionObj = pickRandom(mentions);
+            // Track the mention that was displayed
+            if(!CURRENT_FRAME_MENTION && mentionObj){
+              CURRENT_FRAME_MENTION = mentionObj;
+            }
           }
         }
         
@@ -679,44 +685,41 @@
       const responseTime = (Date.now() - PAGE_LOAD_TIME) / 1000;
       const offers = CONFIG.offers || [];
       const selectedOffer = offers.find(o => o.id === offerId);
-      const mentionObj = mention || {};
 
-      const hasMention = mentionObj && mentionObj.text ? true : false;
+      // Use the mention that was displayed in this frame, not the one from the clicked offer
+      const frameHasMention = CURRENT_FRAME_MENTION ? true : false;
       const payload = {
         timestamp: new Date().toISOString(),
         offerId: offerId,
         period: selectedOffer ? selectedOffer.season : '',
-        offer_has_mention: hasMention,
-        mention: hasMention ? 'oui' : 'non',
-        mentionType: hasMention ? mentionObj.text : '',
-        availableMentionType: hasMention ? mentionObj.text : 'Aucune Mention',
+        offer_has_mention: frameHasMention,
+        mention: frameHasMention ? 'oui' : 'non',
+        mentionType: frameHasMention ? CURRENT_FRAME_MENTION.text : '',
+        availableMentionType: frameHasMention ? CURRENT_FRAME_MENTION.text : 'Aucune Mention',
         responseTime: Math.round(responseTime * 100) / 100,
         displayPosition: OFFERS_DISPLAY_ORDER[offerId] || '?',
         ip: CLIENT_IP || 'unknown',
         sessionId: SESSION_ID
       };
 
-      if(!FIREBASE_ENABLED){
-        alert('❌ Erreur: Firebase non disponible.');
-        return;
-      }
-
-      console.log('📤 Envoi offre sélectionnée à Firebase:', payload);
-      await submitToFirebase(payload);
-      
-      // Store for questionnaire later
+      // Store for questionnaire immediately
       sessionStorage.setItem('last_offer_id', offerId);
       sessionStorage.setItem('collection_timestamp', payload.timestamp);
 
       COLLECTED_RESPONSES['offerId'] = offerId;
-      COLLECTED_RESPONSES['offer_has_mention'] = hasMention;
-      COLLECTED_RESPONSES['mention'] = hasMention ? 'oui' : 'non';
-      COLLECTED_RESPONSES['mentionType'] = hasMention ? mentionObj.text : '';
-      COLLECTED_RESPONSES['availableMentionType'] = hasMention ? mentionObj.text : 'Aucune Mention';
+      COLLECTED_RESPONSES['offer_has_mention'] = frameHasMention;
+      COLLECTED_RESPONSES['mention'] = frameHasMention ? 'oui' : 'non';
+      COLLECTED_RESPONSES['mentionType'] = frameHasMention ? CURRENT_FRAME_MENTION.text : '';
+      COLLECTED_RESPONSES['availableMentionType'] = frameHasMention ? CURRENT_FRAME_MENTION.text : 'Aucune Mention';
 
-      setTimeout(() => {
-        showFrame(6); // Go to questionnaire (Frame 6)
-      }, 1500);
+      // Go to questionnaire immediately for better UX
+      showFrame(6);
+
+      // Send to Firebase in background (non-blocking)
+      if(FIREBASE_ENABLED){
+        console.log('📤 Envoi offre sélectionnée à Firebase:', payload);
+        submitToFirebase(payload).catch(e => console.error('Erreur Firebase:', e));
+      }
     }
 
     function createCardForFrame(offer, mention){
@@ -774,15 +777,6 @@
           sessionId: SESSION_ID
         };
 
-        if(!FIREBASE_ENABLED){
-          alert('❌ Erreur: Firebase non disponible.');
-          btn.textContent = 'Erreur ❌';
-          return;
-        }
-
-        console.log('📤 Envoi offre à Firebase:', payload);
-        await submitToFirebase(payload);
-
         COLLECTED_RESPONSES['offerId'] = offer.id;
         COLLECTED_RESPONSES['offer_has_mention'] = hasMention;
         COLLECTED_RESPONSES['mention'] = hasMention ? 'oui' : 'non';
@@ -791,9 +785,16 @@
 
         btn.textContent = 'Merci 😊';
         
+        // Go to next frame immediately for better UX
         setTimeout(() => {
           showFrame(3);
-        }, 1500);
+        }, 500);
+
+        // Send to Firebase in background (non-blocking)
+        if(FIREBASE_ENABLED){
+          console.log('📤 Envoi offre à Firebase:', payload);
+          submitToFirebase(payload).catch(e => console.error('Erreur Firebase:', e));
+        }
       });
 
       a.appendChild(btn);
