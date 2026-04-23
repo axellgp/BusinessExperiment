@@ -226,6 +226,13 @@
     .slider-input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffb56b);cursor:pointer;box-shadow:0 4px 12px rgba(255,122,0,0.3);transition:all 0.2s}
     .slider-input::-webkit-slider-thumb:hover{transform:scale(1.2)}
     .slider-input::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffb56b);cursor:pointer;border:none;box-shadow:0 4px 12px rgba(255,122,0,0.3);transition:all 0.2s}
+    .slider-input::-webkit-slider-runnable-track{background:linear-gradient(to right,#ff6b6b,#ff7a00,#06b6d4);height:8px;border-radius:4px}
+    .slider-input::-moz-range-track{background:transparent;border:none}
+    @media (max-width:768px){
+      .slider-input{height:10px;padding:6px 0}
+      .slider-input::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffb56b);cursor:pointer;box-shadow:0 4px 12px rgba(255,122,0,0.3);transition:all 0.2s;position:relative;z-index:10}
+      .slider-input::-moz-range-thumb{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ffb56b);cursor:pointer;border:none;box-shadow:0 4px 12px rgba(255,122,0,0.3);transition:all 0.2s}
+    }
     .slider-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px;padding:0 4px}
     .slider-value-display{min-width:45px;text-align:center;font-weight:700;font-size:18px;color:var(--accent);background:rgba(255,122,0,0.1);padding:8px 14px;border-radius:10px;border:1.5px solid rgba(255,122,0,0.2)}
     .choice-container{display:flex;flex-direction:column;gap:10px}
@@ -993,22 +1000,25 @@
           <h3 style="font-size:14px;font-weight:800;color:var(--accent);margin:0 0 16px;text-transform:uppercase;letter-spacing:0.5px">${cat}</h3>`;
         
         qs.forEach((q) => {
-          html += `<div class="question-item" style="margin-bottom:20px">
-            <label style="font-weight:600;color:var(--nav);display:block;margin-bottom:8px;font-size:14px">${q.question}</label>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-              <span style="font-size:11px;color:var(--muted);min-width:100px;text-align:right">${q.labels ? q.labels[0] : '0'}</span>
-              <input type="range" 
-                name="${q.id}" 
-                min="${q.min || 0}" 
-                max="${q.max || 7}" 
-                value="3"
-                class="slider-input"
-                data-type="slider"
-                onchange="updateSliderDisplay(this)"
-                style="flex:1;height:6px;border-radius:3px;background:linear-gradient(to right,#ff6b6b,#ff7a00,#06b6d4);cursor:pointer;-webkit-appearance:none;appearance:none"
-              />
-              <span style="font-size:11px;color:var(--muted);min-width:100px">${q.labels ? q.labels[1] : '7'}</span>
-              <span class="slider-value" id="slider-val-${q.id}" style="font-weight:800;color:var(--accent);min-width:28px;text-align:right;font-size:14px">3</span>
+          html += `<div class="question-item" style="margin-bottom:24px">
+            <label style="font-weight:600;color:var(--nav);display:block;margin-bottom:10px;font-size:14px">${q.question}</label>
+            <div style="font-size:11px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:6px;padding:0 2px">
+              <span>${q.labels ? q.labels[0] : 'Pas du tout'}</span>
+              <span>${q.labels ? q.labels[1] : 'Tout à fait'}</span>
+            </div>
+            <input type="range" 
+              name="${q.id}" 
+              min="${q.min || 0}" 
+              max="${q.max || 7}" 
+              value="3"
+              class="slider-input"
+              data-type="slider"
+              oninput="updateSliderDisplay(this)"
+              onchange="updateSliderDisplay(this)"
+              style="width:100%;height:8px;border-radius:4px;background:linear-gradient(to right,#ff6b6b,#ff7a00,#06b6d4);cursor:pointer;-webkit-appearance:none;appearance:none;padding:0;margin:0"
+            />
+            <div style="text-align:center;margin-top:8px;font-weight:800;color:var(--accent);font-size:14px">
+              <span class="slider-value" id="slider-val-${q.id}">3</span>
             </div>
           </div>`;
         });
