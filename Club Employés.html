@@ -387,13 +387,13 @@
 
         <!-- FRAME 4: Challenge - Attention -->
         <div id="frame-4" class="frame">
-          <div style="width:100%;max-width:600px;margin:0 auto;padding:20px">
+          <div style="width:100%;max-width:700px;margin:0 auto;padding:20px">
             <div style="background:#fff;border-radius:20px;padding:40px;box-shadow:0 12px 40px rgba(11,43,74,0.12);text-align:center">
               <div style="font-size:48px;margin-bottom:16px">🎯</div>
               <h1 style="font-size:28px;font-weight:800;color:var(--nav);margin:0 0 12px">Défi d'attention</h1>
               <p style="color:var(--muted);margin:0 0 28px;font-size:16px">Faites bien attention aux détails !</p>
-              <div style="background:rgba(255,122,0,0.1);border:2px solid rgba(255,122,0,0.3);border-radius:12px;padding:24px;margin-bottom:32px;color:var(--nav);font-weight:600;line-height:1.6">
-                Les détails vont être très importants pour la prochaine étape.<br/>Soyez vigilant(e) à tout ce que vous verrez.
+              <div style="background:rgba(255,122,0,0.1);border:2px solid rgba(255,122,0,0.3);border-radius:12px;padding:24px;margin-bottom:32px;color:var(--nav);font-weight:600;line-height:1.6;font-size:15px">
+                Imaginez la situation suivante : vous souhaitez partir en vacances et vous vous connectez sur la plateforme de votre CE. Deux offres vous sont proposées comme suit. Cliquez directement sur l'offre qui a spontanément attiré votre attention
               </div>
               <button onclick="showFrame(5)" style="padding:12px 20px;background:linear-gradient(135deg,var(--accent),#ffb56b);color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:15px">Continuer →</button>
             </div>
@@ -733,10 +733,7 @@
       CURRENT_FRAME_MENTION = null; // Reset frame mention
 
       let html = `<div style="width:100%;max-width:900px;margin:0 auto">
-        <div style="background:#fff;border-radius:20px;padding:40px;box-shadow:0 12px 40px rgba(11,43,74,0.12);margin-bottom:24px">
-          <p style="color:var(--nav);font-size:15px;line-height:1.6;text-align:center;margin:0">${CONFIG.scenario_description || ''}</p>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:20px">`;
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:20px">`;`
       
       offers.forEach((o, idx) => {
         OFFERS_DISPLAY_ORDER[o.id] = idx + 1;
@@ -1039,11 +1036,32 @@
       
       container.innerHTML = html;
 
-      // Wire up form
+      // Wire up form with validation
       const form = document.getElementById('questionnaireForm');
       if(form){
         form.onsubmit = async (e) => {
           e.preventDefault();
+          
+          // Validate all demographic questions are answered
+          if(demographicQuestions && demographicQuestions.length > 0){
+            for(let q of demographicQuestions){
+              const val = new FormData(form).get(q.id);
+              if(!val){
+                alert(`Veuillez répondre à la question: ${q.question}`);
+                return;
+              }
+            }
+          }
+          
+          // Validate all slider and choice questions are answered
+          for(let q of questions){
+            const val = new FormData(form).get(q.id);
+            if(!val){
+              alert(`Veuillez répondre à la question: ${q.question}`);
+              return;
+            }
+          }
+          
           await handleQuestionnaireSubmit(questions, demographicQuestions);
         };
       }
