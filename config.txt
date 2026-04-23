@@ -59,56 +59,202 @@
   "challenge": {
     "title": "Défi d'attention",
     "subtitle": "Faites bien attention aux détails !",
-    "description": "Imaginez la situation suivante : vous souhaitez partir en vacances et vous vous connectez sur la plateforme de votre CE. Deux offres vous sont proposées comme suit. Cliquez directement sur l’offre qui a spontanément attiré votre attention"
+    "description": "Imaginez la situation suivante : vous souhaitez partir en vacances et vous vous connectez sur la plateforme de votre CE. Deux offres vous sont proposées comme suit. Cliquez directement sur l'offre qui a spontanément attiré votre attention"
   },
+  "scenario_description": "Imaginez la situation suivante : vous souhaitez partir en vacances et vous vous connectez sur la plateforme de votre CE. Deux offres vous sont proposées comme suit. Cliquez directement sur l'offre qui a spontanément attiré votre attention",
+  "demographic_questions": [
+    {
+      "id": "demo_gender",
+      "type": "choice",
+      "question": "Genre",
+      "options": ["Homme", "Femme", "Autre"]
+    },
+    {
+      "id": "demo_age",
+      "type": "choice",
+      "question": "Âge",
+      "options": ["18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75 ans et plus"]
+    },
+    {
+      "id": "demo_csp",
+      "type": "choice",
+      "question": "Catégorie socio-professionnelle",
+      "options": ["Étudiant", "Cadre", "Professions intermédiaires", "Employé", "Ouvrier/Artisan", "Chef d'entreprise"]
+    },
+    {
+      "id": "demo_vacation_freq",
+      "type": "choice",
+      "question": "Fréquence de vacances (fois par an)",
+      "options": ["0 fois par an", "1 fois par an", "2 fois par an", "3 fois par an", "4 fois par an", "5 fois par an", "Plus de 5 fois par an"]
+    }
+  ],
   "questions": [
+    {
+      "id": "att_visual",
+      "type": "slider",
+      "category": "Attention",
+      "question": "Les informations visuelles présentes sur la page ont immédiatement attiré mon attention.",
+      "min": 0,
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
+    },
     {
       "id": "affect_q1",
       "type": "slider",
       "category": "Affection",
-      "question": "Cette offre de vacances me donne-t-elle envie de partir en vacances ?",
+      "question": "Cette offre me donne envie de partir en vacances ?",
       "min": 0,
-      "max": 7
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
     },
     {
-      "id": "antic_q1",
+      "id": "att_distinctive",
       "type": "slider",
-      "category": "Anticipation",
-      "question": "Cette offre me donne envie d'organiser mes vacances avec mon CE",
+      "category": "Attention",
+      "question": "J'ai facilement repéré les éléments distinctifs de l'offre mise en avant.",
       "min": 0,
-      "max": 7
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
+    },
+    {
+      "id": "att_mention_read",
+      "type": "slider",
+      "category": "Attention",
+      "question": "J'ai pris le temps de lire le message mis en avant s'il y en avait un (Promo, Favori ou Exclusivité).",
+      "min": 0,
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
     },
     {
       "id": "att_q1",
       "type": "slider",
       "category": "Attention",
-      "question": "J'ai pris conscience de la différence entre les offres",
+      "question": "J'ai pris conscience de la différence entre les deux offres",
       "min": 0,
-      "max": 7
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
     },
     {
-      "id": "att_q2",
+      "id": "affect_positive",
       "type": "slider",
-      "category": "Attention",
-      "question": "Une offre me semblait bien plus intéressante que l'autre",
+      "category": "Affection",
+      "question": "J'éprouve un sentiment positif envers l'offre qui m'a été suggérée",
       "min": 0,
-      "max": 7
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
     },
     {
-      "id": "comp_q1",
-      "type": "slider",
-      "category": "Comportement",
-      "question": "Cette proposition d'offres est réaliste",
-      "min": 0,
-      "max": 7
-    },
-    {
-      "id": "intent_q1",
+      "id": "intent_values",
       "type": "slider",
       "category": "Intention",
-      "question": "Cette offre me donne envie de partir en vacances pendant une période particulière",
+      "question": "Le type d'offre présenté correspond à mes valeurs et à mes envies.",
       "min": 0,
-      "max": 7
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
+    },
+    {
+      "id": "comp_reassuring",
+      "type": "slider",
+      "category": "Comportement",
+      "question": "Je trouve ce mode de présentation (recommandation des collègues ou avantage prix) rassurant.",
+      "min": 0,
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
+    },
+    {
+      "id": "antic_good_deal",
+      "type": "slider",
+      "category": "Anticipation",
+      "question": "Ce bandeau me laisse présager que je vais faire une \"bonne affaire\" ou un \"bon choix\".",
+      "min": 0,
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
+    },
+    {
+      "id": "antic_projection",
+      "type": "slider",
+      "category": "Anticipation",
+      "question": "La lecture du bandeau m'a aidé à me projeter dans mes futures vacances.",
+      "min": 0,
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
+    },
+    {
+      "id": "antic_imagine_quality",
+      "type": "slider",
+      "category": "Anticipation",
+      "question": "En lisant ce bandeau, j'ai pu imaginer la qualité de mon séjour.",
+      "min": 0,
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
+    },
+    {
+      "id": "intent_choice",
+      "type": "slider",
+      "category": "Intention",
+      "question": "Sur la base de ce bandeau, j'ai l'intention de choisir cette destination plutôt qu'une autre.",
+      "min": 0,
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
+    },
+    {
+      "id": "intent_decision",
+      "type": "slider",
+      "category": "Intention",
+      "question": "Si je devais réserver maintenant, ce bandeau influencerait positivement ma décision finale.",
+      "min": 0,
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
+    },
+    {
+      "id": "comp_click_desire",
+      "type": "slider",
+      "category": "Comportement",
+      "question": "J'ai eu envie de cliquer sur l'offre dès l'apparition du message.",
+      "min": 0,
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
+    },
+    {
+      "id": "comp_time_spent",
+      "type": "slider",
+      "category": "Comportement",
+      "question": "J'ai passé plus de temps à regarder cette offre spécifique qu'une offre classique sans bandeau.",
+      "min": 0,
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
+    },
+    {
+      "id": "comp_easy_compare",
+      "type": "slider",
+      "category": "Comportement",
+      "question": "Avez-vous trouvé les offres faciles à comparer ?",
+      "min": 0,
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
+    },
+    {
+      "id": "comp_clear_presentation",
+      "type": "slider",
+      "category": "Comportement",
+      "question": "Avez-vous trouvé la présentation claire ?",
+      "min": 0,
+      "max": 7,
+      "labels": ["Pas du tout d'accord", "Tout à fait d'accord"]
+    },
+    {
+      "id": "intent_season_pref",
+      "type": "choice",
+      "category": "Intention",
+      "question": "De façon générale, préférez-vous prendre vos vacances l'hiver ou l'été ?",
+      "options": ["Hiver", "Été", "Pas de préférence"]
+    },
+    {
+      "id": "final_mention",
+      "type": "choice",
+      "category": "Finale",
+      "question": "Quel était le bandeau affiché sur l'offre que vous avez choisie ?",
+      "options": ["Le favoris de l'équipe", "Promo", "Offre exclusive", "Aucune mention", "Limited Only"]
     }
   ]
 }

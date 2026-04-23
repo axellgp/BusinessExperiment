@@ -441,7 +441,6 @@
               <div style="background:rgba(34,197,94,0.1);border:1.5px solid rgba(34,197,94,0.3);border-radius:12px;padding:16px;margin-bottom:28px;color:#166534;font-weight:600">
                 ✓ Merci pour votre participation !
               </div>
-              <button onclick="location.reload()" style="padding:12px 20px;background:linear-gradient(135deg,var(--accent),#ffb56b);color:#fff;border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:15px">Recommencer</button>
             </div>
           </div>
         </div>
@@ -734,6 +733,9 @@
       CURRENT_FRAME_MENTION = null; // Reset frame mention
 
       let html = `<div style="width:100%;max-width:900px;margin:0 auto">
+        <div style="background:#fff;border-radius:20px;padding:40px;box-shadow:0 12px 40px rgba(11,43,74,0.12);margin-bottom:24px">
+          <p style="color:var(--nav);font-size:15px;line-height:1.6;text-align:center;margin:0">${CONFIG.scenario_description || ''}</p>
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:20px">`;
       
       offers.forEach((o, idx) => {
@@ -937,6 +939,7 @@
     function renderFinalQuestions(){
       const container = document.getElementById('questionsContainer');
       const questions = (CONFIG && CONFIG.questions) || [];
+      const demographicQuestions = (CONFIG && CONFIG.demographic_questions) || [];
       const qConfig = (CONFIG && CONFIG.questionnaire) || {title: 'Vos impressions', subtitle: 'Aidez-nous à améliorer', emoji: '📋'};
 
       if(questions.length === 0){
@@ -944,19 +947,45 @@
         return;
       }
 
-      // Group questions by category
-      const categoryOrder = ['Affection', 'Anticipation', 'Attention', 'Comportement', 'Intention'];
+      let html = '';
+
+      // Render demographic questions first
+      if(demographicQuestions.length > 0){
+        html += `<div style="margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid rgba(11,43,74,0.1)">
+          <h3 style="font-size:14px;font-weight:800;color:var(--accent);margin:0 0 16px;text-transform:uppercase;letter-spacing:0.5px">Informations Signalétiques</h3>`;
+        
+        demographicQuestions.forEach((q) => {
+          html += `<div class="question-item" style="margin-bottom:20px">
+            <label style="font-weight:600;color:var(--nav);display:block;margin-bottom:12px;font-size:14px">${q.question}</label>
+            <div style="display:flex;flex-direction:column;gap:10px">`;
+          
+          q.options.forEach((option) => {
+            html += `<label style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,122,0,0.02);border:1.5px solid rgba(11,43,74,0.12);border-radius:10px;cursor:pointer;transition:all 0.3s">
+              <input type="radio" name="${q.id}" value="${option}" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);margin:0" />
+              <span style="cursor:pointer;flex:1;font-weight:500">${option}</span>
+            </label>`;
+          });
+          
+          html += `</div></div>`;
+        });
+        
+        html += `</div>`;
+      }
+
+      // Group slider questions by category
+      const categoryOrder = ['Attention', 'Affection', 'Anticipation', 'Comportement', 'Intention', 'Finale'];
       const grouped = {};
       categoryOrder.forEach(cat => { grouped[cat] = []; });
       
       questions.forEach(q => {
-        const cat = q.category || 'Autres';
-        if(!grouped[cat]) grouped[cat] = [];
-        grouped[cat].push(q);
+        if(q.type === 'slider'){
+          const cat = q.category || 'Autres';
+          if(!grouped[cat]) grouped[cat] = [];
+          grouped[cat].push(q);
+        }
       });
 
-      // Render questions grouped by category with sliders
-      let html = '';
+      // Render slider questions grouped by category
       Object.entries(grouped).forEach(([cat, qs]) => {
         if(qs.length === 0) return;
         html += `<div style="margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid rgba(11,43,74,0.1)">
@@ -965,8 +994,8 @@
         qs.forEach((q) => {
           html += `<div class="question-item" style="margin-bottom:20px">
             <label style="font-weight:600;color:var(--nav);display:block;margin-bottom:8px;font-size:14px">${q.question}</label>
-            <div style="display:flex;align-items:center;gap:12px">
-              <span style="font-size:11px;color:var(--muted);min-width:24px">0</span>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span style="font-size:11px;color:var(--muted);min-width:100px;text-align:right">${q.labels ? q.labels[0] : '0'}</span>
               <input type="range" 
                 name="${q.id}" 
                 min="${q.min || 0}" 
@@ -977,13 +1006,36 @@
                 onchange="updateSliderDisplay(this)"
                 style="flex:1;height:6px;border-radius:3px;background:linear-gradient(to right,#ff6b6b,#ff7a00,#06b6d4);cursor:pointer;-webkit-appearance:none;appearance:none"
               />
-              <span style="font-size:11px;color:var(--muted);min-width:24px">7</span>
+              <span style="font-size:11px;color:var(--muted);min-width:100px">${q.labels ? q.labels[1] : '7'}</span>
               <span class="slider-value" id="slider-val-${q.id}" style="font-weight:800;color:var(--accent);min-width:28px;text-align:right;font-size:14px">3</span>
             </div>
           </div>`;
         });
         html += `</div>`;
       });
+
+      // Render choice questions (final mention and season preference)
+      const choiceQuestions = questions.filter(q => q.type === 'choice');
+      if(choiceQuestions.length > 0){
+        html += `<div style="margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid rgba(11,43,74,0.1)">`;
+        
+        choiceQuestions.forEach((q) => {
+          html += `<div class="question-item" style="margin-bottom:24px">
+            <label style="font-weight:600;color:var(--nav);display:block;margin-bottom:12px;font-size:14px">${q.question}</label>
+            <div style="display:flex;flex-direction:column;gap:10px">`;
+          
+          q.options.forEach((option) => {
+            html += `<label style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(255,122,0,0.02);border:1.5px solid rgba(11,43,74,0.12);border-radius:10px;cursor:pointer;transition:all 0.3s">
+              <input type="radio" name="${q.id}" value="${option}" style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent);margin:0" />
+              <span style="cursor:pointer;flex:1;font-weight:500">${option}</span>
+            </label>`;
+          });
+          
+          html += `</div></div>`;
+        });
+        
+        html += `</div>`;
+      }
       
       container.innerHTML = html;
 
@@ -992,7 +1044,7 @@
       if(form){
         form.onsubmit = async (e) => {
           e.preventDefault();
-          await handleQuestionnaireSubmit(questions);
+          await handleQuestionnaireSubmit(questions, demographicQuestions);
         };
       }
 
@@ -1019,11 +1071,20 @@
       if(progressBar) progressBar.style.width = percent + '%';
     }
 
-    async function handleQuestionnaireSubmit(questions){
+    async function handleQuestionnaireSubmit(questions, demographicQuestions){
       const form = document.getElementById('questionnaireForm');
       const formData = new FormData(form);
       const responses = {};
       
+      // Collect demographic responses
+      if(demographicQuestions && demographicQuestions.length > 0){
+        demographicQuestions.forEach(q => {
+          const value = formData.get(q.id);
+          responses[q.id] = value || null;
+        });
+      }
+      
+      // Collect question responses
       questions.forEach(q => {
         const value = formData.get(q.id);
         responses[q.id] = value || null;
@@ -1063,6 +1124,12 @@
       }
       
       // Save questions to COLLECTED_RESPONSES
+      if(demographicQuestions && demographicQuestions.length > 0){
+        demographicQuestions.forEach(q => {
+          COLLECTED_RESPONSES[q.id] = responses[q.id];
+        });
+      }
+      
       questions.forEach(q => {
         COLLECTED_RESPONSES[q.id] = responses[q.id];
       });
@@ -1481,11 +1548,21 @@
       const questionsBeforeIds = questionsBefore.map(q => q.id);
       header = [...header, ...questionsBeforeIds];
       
+      // Add demographic question headers
+      const demographicQuestions = (CONFIG && CONFIG.demographic_questions) || [];
+      const demographicIds = demographicQuestions.map(q => q.id);
+      header = [...header, ...demographicIds];
+      
       // Get all unique question IDs from responses
       const allQuestionIds = new Set();
       responses.forEach(r => {
+        // Check in questionnaireResponses (old format)
         if(r.questionnaireResponses){
           Object.keys(r.questionnaireResponses).forEach(qId => allQuestionIds.add(qId));
+        }
+        // Check in responses object (new format)
+        if(r.responses){
+          Object.keys(r.responses).forEach(qId => allQuestionIds.add(qId));
         }
       });
       
@@ -1511,9 +1588,34 @@
           row.push(answerValue);
         });
         
-        // Add questionnaire answers
+        // Add demographic answers
+        demographicIds.forEach(qId => {
+          let answerValue = '';
+          // Check in questionnaireResponses (old format)
+          if(r.questionnaireResponses && r.questionnaireResponses[qId]){
+            answerValue = r.questionnaireResponses[qId];
+          }
+          // Check in responses object (new format)
+          if(r.responses && r.responses[qId]){
+            answerValue = r.responses[qId];
+          }
+          row.push(answerValue);
+        });
+        
+        // Add questionnaire answers (all remaining questions)
         sortedQuestionIds.forEach(qId => {
-          const answerValue = r.questionnaireResponses && r.questionnaireResponses[qId] ? r.questionnaireResponses[qId] : '';
+          let answerValue = '';
+          // Skip demographic questions as they're already added
+          if(demographicIds.includes(qId)) return;
+          
+          // Check in questionnaireResponses (old format)
+          if(r.questionnaireResponses && r.questionnaireResponses[qId]){
+            answerValue = r.questionnaireResponses[qId];
+          }
+          // Check in responses object (new format)
+          if(r.responses && r.responses[qId]){
+            answerValue = r.responses[qId];
+          }
           row.push(answerValue);
         });
         
