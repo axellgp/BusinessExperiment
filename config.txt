@@ -59,7 +59,7 @@
   "challenge": {
     "title": "Défi d'attention",
     "subtitle": "Faites bien attention aux détails !",
-    "description": "Les détails vont être importants pour la prochaine étape"
+    "description": "Imaginez la situation suivante : vous souhaitez partir en vacances et vous vous connectez sur la plateforme de votre CE. Deux offres vous sont proposées comme suit. Cliquez directement sur l’offre qui a spontanément attiré votre attention"
   },
   "questions": [
     {
