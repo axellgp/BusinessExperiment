@@ -730,10 +730,9 @@
       if(CONFIG.random_order) offers = shuffle(offers);
 
       const mentions = normalizeMentions(CONFIG.mentions);
-      CURRENT_FRAME_MENTION = null; // Reset frame mention
+      CURRENT_FRAME_MENTION = null;
 
-      let html = `<div style="width:100%;max-width:900px;margin:0 auto">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:20px">`;
+      let html = '<div style="width:100%;max-width:900px;margin:0 auto"><div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:20px">';
       
       offers.forEach((o, idx) => {
         OFFERS_DISPLAY_ORDER[o.id] = idx + 1;
@@ -742,31 +741,36 @@
           const prob = (typeof CONFIG.mention_probability === 'number') ? CONFIG.mention_probability : 0;
           if(Math.random() < prob){
             mentionObj = pickRandom(mentions);
-            // Track the mention that was displayed
             if(!CURRENT_FRAME_MENTION && mentionObj){
               CURRENT_FRAME_MENTION = mentionObj;
             }
           }
         }
         
+        let card = '<div class="offering-card" style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 16px rgba(11,43,74,0.08);position:relative;transition:all 0.3s;border:2px solid rgba(11,43,74,0.1);display:flex;flex-direction:column" onmouseover="this.style.boxShadow=\'0 8px 24px rgba(11,43,74,0.12)\';this.style.transform=\'translateY(-4px)\'" onmouseout="this.style.boxShadow=\'0 4px 16px rgba(11,43,74,0.08)\';this.style.transform=\'translateY(0)\'">';
+        
+        if(o.image){
+          card += '<div style="width:100%;height:180px;background-image:url(\'' + o.image + '\');background-size:cover;background-position:center;border-radius:12px;margin-bottom:16px;pointer-events:none"></div>';
+        }
+        
+        if(mentionObj){
+          card += '<div class="mention" style="position:absolute;top:12px;left:12px;background:' + (mentionObj.color || 'var(--accent)') + ';color:#fff;padding:8px 12px;border-radius:8px;font-weight:800;font-size:12px">' + (mentionObj.emoji ? mentionObj.emoji + ' ' : '') + mentionObj.text + '</div>';
+        }
+        
+        card += '<div style="font-size:48px;margin-bottom:12px;text-align:center"></div>';
+        card += '<h3 style="font-size:20px;font-weight:800;color:var(--nav);margin:0 0 12px">' + o.title + '</h3>';
+        card += '<p style="color:var(--muted);margin:0 0 auto;line-height:1.5;flex:1">' + o.desc + '</p>';
+        
         const mentionJson = JSON.stringify(mentionObj || {});
-        html += `<div class="offering-card" 
-          style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 16px rgba(11,43,74,0.08);position:relative;transition:all 0.3s;border:2px solid rgba(11,43,74,0.1);display:flex;flex-direction:column" 
-          onmouseover="this.style.boxShadow='0 8px 24px rgba(11,43,74,0.12)';this.style.transform='translateY(-4px)'"
-          onmouseout="this.style.boxShadow='0 4px 16px rgba(11,43,74,0.08)';this.style.transform='translateY(0)'">
-          ${o.image ? `<div style="width:100%;height:180px;background-image:url('${o.image}');background-size:cover;background-position:center;border-radius:12px;margin-bottom:16px;pointer-events:none"></div>` : ''}
-          ${mentionObj ? `<div class="mention" style="position:absolute;top:12px;left:12px;background:${mentionObj.color || 'var(--accent)'};color:#fff;padding:8px 12px;border-radius:8px;font-weight:800;font-size:12px">${mentionObj.emoji ? mentionObj.emoji + ' ' : ''}${mentionObj.text}</div>` : ''}
-          <div style="font-size:48px;margin-bottom:12px;text-align:center">${o.season === 'hiver' ? '' : ''}</div>
-          <h3 style="font-size:20px;font-weight:800;color:var(--nav);margin:0 0 12px">${o.title}</h3>
-          <p style="color:var(--muted);margin:0 0 auto;line-height:1.5;flex:1">${o.desc}</p>
-          <button class="choose" data-offer="${o.id}" data-mention='${mentionJson}' style="width:100%;padding:12px 16px;background:linear-gradient(135deg,var(--accent),#ffb56b);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;margin-top:16px;transition:all 0.2s" onmouseover="this.style.background='#ff6b00'" onmouseout="this.style.background='linear-gradient(135deg,var(--accent),#ffb56b)'">Choisir cette offre</button>
-        </div>`;
+        card += '<button class="choose" data-offer="' + o.id + '" data-mention=\'' + mentionJson + '\' style="width:100%;padding:12px 16px;background:linear-gradient(135deg,var(--accent),#ffb56b);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;margin-top:16px;transition:all 0.2s" onmouseover="this.style.background=\'#ff6b00\'" onmouseout="this.style.background=\'linear-gradient(135deg,var(--accent),#ffb56b)\'">Choisir cette offre</button>';
+        card += '</div>';
+        
+        html += card;
       });
       
-      html += `</div></div>`;
+      html += '</div></div>';
       container.innerHTML = html;
 
-      // Wire up offer selection buttons
       document.querySelectorAll('.offering-card .choose').forEach(btn => {
         btn.addEventListener('click', async (e) => {
           e.stopPropagation();
