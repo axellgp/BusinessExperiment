@@ -981,26 +981,9 @@
         html += `</div>`;
       }
 
-      // Group slider questions by category
-      const categoryOrder = ['Attention', 'Affection', 'Anticipation', 'Comportement', 'Intention', 'Finale'];
-      const grouped = {};
-      categoryOrder.forEach(cat => { grouped[cat] = []; });
-      
+      // Render slider questions without category grouping
       questions.forEach(q => {
         if(q.type === 'slider'){
-          const cat = q.category || 'Autres';
-          if(!grouped[cat]) grouped[cat] = [];
-          grouped[cat].push(q);
-        }
-      });
-
-      // Render slider questions grouped by category
-      Object.entries(grouped).forEach(([cat, qs]) => {
-        if(qs.length === 0) return;
-        html += `<div style="margin-bottom:28px;padding-bottom:24px;border-bottom:1px solid rgba(11,43,74,0.1)">
-          <h3 style="font-size:14px;font-weight:800;color:var(--accent);margin:0 0 16px;text-transform:uppercase;letter-spacing:0.5px">${cat}</h3>`;
-        
-        qs.forEach((q) => {
           html += `<div class="question-item" style="margin-bottom:24px">
             <label style="font-weight:600;color:var(--nav);display:block;margin-bottom:10px;font-size:14px">${q.question}</label>
             <div style="font-size:11px;color:var(--muted);display:flex;justify-content:space-between;margin-bottom:6px;padding:0 2px">
@@ -1022,8 +1005,7 @@
               <span class="slider-value" id="slider-val-${q.id}">3</span>
             </div>
           </div>`;
-        });
-        html += `</div>`;
+        }
       });
 
       // Render choice questions (final mention and season preference)
